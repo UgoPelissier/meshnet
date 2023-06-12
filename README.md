@@ -19,5 +19,5 @@ conda activate meshnet
 ## Contact
 
 Ugo Pelissier \
-\<[ugo.pelissier.ext@safrangroup.com](mailto:ugo.pelissier.ext@safrangroup.com)\>
+\<[ugo.pelissier.ext@safrangroup.com](mailto:ugo.pelissier.ext@safrangroup.com)\> \
 \<[ugo.pelissier@etu.minesparis.psl.eu](mailto:ugo.pelissier@etu.minesparis.psl.eu)\>
