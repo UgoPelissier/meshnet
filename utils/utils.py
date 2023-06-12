@@ -12,6 +12,7 @@ def train_val_test_split(
         val_size: float,
         test_size: float
 ) -> Tuple[np.ndarray, np.ndarray]:
+    """Split the dataset into train, validation and test sets."""
     indices = np.random.permutation(n)
     train_index, val_index, test_index = indices[:int(n*(1-(val_size+test_size)))], indices[int(n*(1-(val_size+test_size))):int(n*(1-test_size))],  indices[int(n*(1-test_size)):]
     np.savetxt(osp.join(path, 'data', 'indices', 'train_index.txt'), train_index, fmt='%i')
@@ -21,10 +22,12 @@ def train_val_test_split(
 
 
 def load_train_val_test_index(path: str) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Load the train, validation and test sets indices."""
     return np.loadtxt(osp.join(path, 'data', 'indices', 'train_index.txt'), dtype=int), np.loadtxt(osp.join(path, 'data', 'indices', 'val_index.txt'), dtype=int), np.loadtxt(osp.join(path, 'data', 'indices', 'test_index.txt'), dtype=int)
 
 
 def get_next_version(path: str) -> int:
+    """Get the next version number for the logger."""
     log = logging.getLogger(__name__)
     fs = get_filesystem(path)
 

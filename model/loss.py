@@ -15,6 +15,7 @@ def cell2point(
         file: str,
         field: Tensor
 ) -> np.ndarray:
+    """Convert cell data to point data."""
     reader = vtk.vtkXMLUnstructuredGridReader()  
     reader.SetFileName(file) 
     reader.Update()
@@ -32,6 +33,7 @@ def mesh_interpolation(
         test: Optional[bool] = None,
         epoch: Optional[int] = None
 )-> float:
+    """Project the prediction on the mesh and compute the error."""
     pred = meshio.read(osp.join(val_folder, "pred", name,  f'{name}_pred_{epoch:03}.vtk')) if (test is not None and epoch is not None) else meshio.read(osp.join(val_folder, f'tmp/{name}.vtk'))
     triPred = Triangulation(x=pred.points[:,0], y=pred.points[:,1], triangles=pred.cells[0].data)
 
@@ -74,6 +76,7 @@ def save_temp(
         test: Optional[bool] = None,
         epoch: Optional[int] = None
 ) -> None:
+    """Save the mesh prediction in a temporary file."""
     if test is not None:
         data = torch.hstack((x, pos, pred))
     else:
@@ -135,6 +138,7 @@ def projection_loss(
         test: Optional[bool] = None,
         epoch: Optional[int] = None
 ) -> float:
+    """Compute the projection loss."""
     if (torch.sum(pred<=0)==0):
         if ((test is not None) and (epoch is not None)):
             try:

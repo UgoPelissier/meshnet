@@ -17,14 +17,7 @@ class MyLightningCLI(LightningCLI):
             },
             {
                 "class_path": "utils.progressbar.MyProgressBar",
-            },
-            # {
-            #     "class_path": "lightning.pytorch.callbacks.LearningRateMonitor",
-            #     "init_args": {
-            #         "logging_interval": "step",
-            #         "log_momentum": True,
-            #     },
-            # }
+            }
         ]
         logger = {
             "class_path": "lightning.pytorch.loggers.TensorBoardLogger",

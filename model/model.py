@@ -17,6 +17,7 @@ from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
 
 
 class LightningNet(pl.LightningModule):
+    """Lightning module for the MeshNet model."""
     def __init__(
             self,
             input_channels: int = 7,
@@ -31,6 +32,7 @@ class LightningNet(pl.LightningModule):
         ) -> None:
         super().__init__()
         
+        # Define the model
         self.layer1 = torch.nn.Linear(input_channels, 128)
         self.layer2 = torch.nn.Linear(128, 256)
         self.layer3 = torch.nn.Linear(256, 1)
@@ -57,12 +59,14 @@ class LightningNet(pl.LightningModule):
         self.lr_scheduler = lr_scheduler
 
     def forward(self, batch) -> torch.Tensor:
+        """Forward pass of the model."""
         x = F.relu(self.layer1(batch.x))
         x = F.relu(self.layer2(x))
         x = self.layer3(x)
         return x
 
     def init_folder(self, folder: str) -> None:
+        """Initialize the folder for the validation and test."""
         if not osp.exists(folder):
             os.makedirs(folder)
             os.makedirs(osp.join(folder, "pred"))
@@ -77,6 +81,7 @@ class LightningNet(pl.LightningModule):
                 )
 
     def training_step(self, batch, batch_idx: int) -> torch.Tensor:
+        """Training step of the model."""
         rank = self.trainer.global_rank
         if rank == 0:
             self.init_folder(folder=self.val_folder)
@@ -101,6 +106,7 @@ class LightningNet(pl.LightningModule):
         return loss
     
     def validation_step(self, batch, batch_idx: int) -> torch.Tensor:
+        """Validation step of the model."""
         preds = self(batch)
         sizes = (batch.ptr[1:] - batch.ptr[:-1]).tolist()
         loss_proj = 0
@@ -118,6 +124,7 @@ class LightningNet(pl.LightningModule):
         return loss
     
     def test_step(self, batch, batch_idx: int) -> torch.Tensor:
+        """Test step of the model."""
         rank = self.trainer.global_rank
         if rank == 0:
             self.init_folder(folder=self.test_folder)
@@ -138,7 +145,8 @@ class LightningNet(pl.LightningModule):
 
         return loss
     
-    def configure_optimizers(self):    
+    def configure_optimizers(self):
+        """Configure the optimizer and the learning rate scheduler."""
         optimizer = self.optimizer(self.parameters())
 
         if self.lr_scheduler is None:

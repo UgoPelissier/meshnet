@@ -7,6 +7,7 @@ from torch_geometric.data import InMemoryDataset, Data
 
 
 class FreeFem(InMemoryDataset):
+    """FreeFem dataset."""
     def __init__(
             self,
             root: str,
@@ -45,6 +46,7 @@ class FreeFem(InMemoryDataset):
             end: np.ndarray,
             scale: float
     ) -> float:
+        """Compute the length of a line."""
         return scale*float(np.linalg.norm(end-start))
     
     def ellipse(
@@ -53,12 +55,14 @@ class FreeFem(InMemoryDataset):
             r2: float,
             scale: float
     ) -> float:
+        """Compute the length of an ellipse."""
         return scale*np.sqrt((r1**2 + r2**2)/2)
 
     def length(
             self,
             df: pd.DataFrame
     ) -> np.ndarray:
+        """Compute the length of the primitive."""
         length = []
         for i in range(df.shape[0]):
             temp = df.iloc[i]
