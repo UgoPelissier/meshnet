@@ -1,0 +1,76 @@
+IMPORT "io.edp"
+
+load "iovtk"
+
+real rstart = 0.75;
+real xstart = -5.;
+real L = 30. - xstart;
+real h = 5.;
+real margin = 2.;
+
+func string typoTmpSave(string path, string name, int epoch){
+    string title;
+    if (epoch<10){
+        title = path + "/tmp/" + name + ".vtk";
+    }
+    else if (epoch<100) {
+        title = path + "/tmp/" + name + ".vtk";
+    }
+    else {
+        title = path + "/tmp/" + name + ".vtk";
+    }
+    return title;
+}
+
+func string typoTitle(string path, string name, int epoch){
+    string title;
+    if (epoch<10){
+        title = path + "/pred/" + name + "/" + name + "_pred_00" + epoch + ".vtk";
+    }
+    else if (epoch<100) {
+        title = path + "/pred/" + name + "/" + name + "_pred_0" + epoch + ".vtk";
+    }
+    else {
+        title = path + "/pred/" + name + "/" + name + "_pred_" + epoch + ".vtk";
+    }
+    return title;
+}
+
+int train = importInt("train");
+int epoch = importInt("epoch");
+
+string path = importString("path");
+string name = importString("name");
+
+int[int] type = importIntArray("type");
+real[int] ts = importFloatArray("tstart");
+real[int] te = importFloatArray("tend");
+real[int] xs = importFloatArray("xs");
+real[int] ys = importFloatArray("ys");
+real[int] zs = importFloatArray("zs");
+real[int] xe = importFloatArray("xe");
+real[int] ye = importFloatArray("ye");
+real[int] ze = importFloatArray("ze");
+real[int] r1 = importFloatArray("r1");
+real[int] r2 = importFloatArray("r2");
+int[int] points = importIntArray("points");
+
+border b(t=0, 1.0; i)
+{
+    real tt = (te[i]-ts[i])*t + ts[i];
+    real xstart = xs[i]-r1[i]*cos(ts[i]);
+    real xend = xe[i]-r1[i]*cos(te[i]);
+    real ystart = ys[i]-r2[i]*sin(ts[i]);
+    real yend = ye[i]-r2[i]*sin(te[i]);
+    x = (xend-xstart)*tt + xstart + r1[i]*cos(tt);
+    y = (yend-ystart)*tt + ystart + r2[i]*sin(tt);
+}
+
+mesh ThPred = buildmesh(b(points));
+
+if (train) {
+    savevtk(typoTmpSave(path, name, epoch), ThPred, bin=false);
+}
+else {
+    savevtk(typoTitle(path, name, epoch), ThPred, bin=false);
+}
