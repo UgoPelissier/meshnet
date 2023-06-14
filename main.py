@@ -3,7 +3,6 @@ from model.model import LightningNet
 
 from lightning.pytorch.cli import LightningCLI
 import warnings
-from lightning.pytorch.callbacks import RichModelSummary
 
 class MyLightningCLI(LightningCLI):
     """Custom Lightning CLI to define default arguments."""
