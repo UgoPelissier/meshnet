@@ -83,7 +83,7 @@ class LightningNet(pl.LightningModule):
         preds = self(batch)
         sizes = (batch.ptr[1:] - batch.ptr[:-1]).tolist()
 
-        for pred, x, pos, name in zip(preds.split(sizes), batch.x.split(sizes), batch.pos.split(sizes), np.array_split(np.array(batch.name), len(batch.name))):
+        for pred, x, pos, name in zip(preds.split(sizes), batch.x.split(sizes), batch.pos.split(sizes), batch.name.split([1]*batch.name.shape[0])):
                 loss_proj += projection_loss(pred, x, pos, "stokes_{:03d}".format(name.item()), self.path, self.dataset, self.val_folder)
                     
         loss = F.mse_loss(preds, batch.y.unsqueeze(dim=-1))
@@ -100,9 +100,9 @@ class LightningNet(pl.LightningModule):
         sizes = (batch.ptr[1:] - batch.ptr[:-1]).tolist()
         loss_proj = 0
 
-        for pred, x, pos, name in zip(preds.split(sizes), batch.x.split(sizes), batch.pos.split(sizes), np.array_split(np.array(batch.name), len(batch.name))):
+        for pred, x, pos, name in zip(preds.split(sizes), batch.x.split(sizes), batch.pos.split(sizes), batch.name.split([1]*batch.name.shape[0])):
             for sample in self.val_idx:
-                if ((int(name.item()[-7:-4])==sample)):
+                if (name==sample):
                     loss_proj += projection_loss(pred, x, pos, "stokes_{:03d}".format(name.item()), self.path, self.dataset, self.val_folder, test=True, epoch=self.trainer.current_epoch)
 
         loss = F.mse_loss(preds, batch.y.unsqueeze(dim=-1))
@@ -122,7 +122,7 @@ class LightningNet(pl.LightningModule):
         sizes = (batch.ptr[1:] - batch.ptr[:-1]).tolist()
         loss_proj = 0
 
-        for pred, x, pos, name in zip(preds.split(sizes), batch.x.split(sizes), batch.pos.split(sizes), np.array_split(np.array(batch.name), len(batch.name))):
+        for pred, x, pos, name in zip(preds.split(sizes), batch.x.split(sizes), batch.pos.split(sizes), batch.name.split([1]*batch.name.shape[0])):
             for sample in self.test_idx:
                 if ((int(name.item()[-7:-4])==sample)):
                     loss_proj += projection_loss(pred, x, pos, "stokes_{:03d}".format(name.item()), self.path, self.dataset, self.test_folder, test=True, epoch=self.trainer.current_epoch)
