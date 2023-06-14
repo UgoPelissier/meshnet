@@ -76,8 +76,7 @@ class LightningNet(pl.LightningModule):
 
     def training_step(self, batch, batch_idx: int) -> torch.Tensor:
         """Training step of the model."""
-        rank = self.trainer.global_rank
-        if rank == 0:
+        if self.trainer.global_rank == 0:
             self.init_folder(folder=self.val_folder)
 
         loss_proj = 0
