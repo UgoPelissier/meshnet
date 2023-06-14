@@ -142,15 +142,15 @@ def projection_loss(
     if (torch.sum(pred<=0)==0):
         if ((test is not None) and (epoch is not None)):
             try:
-                save_temp(pred, x, pos, path, val_folder, name[:-4], test, epoch)
-                mesh_interpolation(dataset, val_folder, name[:-4], test, epoch)
+                save_temp(pred, x, pos, path, val_folder, name, test, epoch)
+                mesh_interpolation(dataset, val_folder, name, test, epoch)
                 return 0.
             except Exception:
                 return 0.
         else:
             try:
-                save_temp(pred, x, pos, path, val_folder, name[:-4])
-                return mesh_interpolation(dataset, val_folder, name[:-4])
+                save_temp(pred, x, pos, path, val_folder, name)
+                return mesh_interpolation(dataset, val_folder, name)
             except Exception:
                 return 10.
     return 10.

@@ -83,7 +83,7 @@ class FreeFem(InMemoryDataset):
         x = torch.tensor(np.array(df.drop(columns=['xstart', 'ystart', 'zstart', 'xend', 'yend', 'zend', 'label', 'n'])), dtype=torch.float32)
         pos = torch.tensor(df[['xstart', 'ystart', 'zstart', 'xend', 'yend', 'zend']].values)
         y = torch.abs(torch.tensor(df['length']/df['n'], dtype=torch.float32))
-        name = f'{name}.txt'
+        name = torch.tensor(int(name[-3:]), dtype=torch.long)
 
         return Data(x=x, pos=pos, y=y, name=name)
 
