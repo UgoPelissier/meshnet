@@ -1,11 +1,7 @@
-from typing import Any
 import numpy as np
 import os
 import os.path as osp
 import shutil
-
-from multiprocessing import Pool
-from itertools import repeat
 
 from utils.utils import load_train_val_test_index, get_next_version
 from model.loss import projection_loss
@@ -21,7 +17,6 @@ class LightningNet(pl.LightningModule):
     def __init__(
             self,
             input_channels: int = 7,
-            threads: bool = False,
             path: str = '/home/upelissier/30-Implements/meshnet/',
             dataset: str = '/data/users/upelissier/30-Implements/freefem/',
             logs: str = '/data/users/upelissier/30-Implements/meshnet/logs/',
@@ -37,7 +32,6 @@ class LightningNet(pl.LightningModule):
         self.layer2 = torch.nn.Linear(128, 256)
         self.layer3 = torch.nn.Linear(256, 1)
 
-        self.threads = threads
         self.path = path
         self.dataset = dataset
         self.logs = logs
@@ -90,11 +84,7 @@ class LightningNet(pl.LightningModule):
         preds = self(batch)
         sizes = (batch.ptr[1:] - batch.ptr[:-1]).tolist()
 
-        if (self.threads):
-            with Pool() as pool:
-                loss_proj += np.sum(pool.starmap(projection_loss, zip(preds.detach().split(sizes), batch.x.split(sizes), batch.pos.split(sizes), batch.name, repeat(self.path), repeat(self.dataset), repeat(self.val_folder))))
-        else:
-            for pred, x, pos, name in zip(preds.split(sizes), batch.x.split(sizes), batch.pos.split(sizes), np.array_split(np.array(batch.name), len(batch.name))):
+        for pred, x, pos, name in zip(preds.split(sizes), batch.x.split(sizes), batch.pos.split(sizes), np.array_split(np.array(batch.name), len(batch.name))):
                 loss_proj += projection_loss(pred, x, pos, name[0], self.path, self.dataset, self.val_folder)
                     
         loss = F.mse_loss(preds, batch.y.unsqueeze(dim=-1))
