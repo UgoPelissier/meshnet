@@ -18,12 +18,12 @@ class MyProgressBar(RichProgressBar):
         refresh_rate: int = 1,
         leave: bool = False,
         theme: RichProgressBarTheme = RichProgressBarTheme(description="green_yellow",
-                                                                             progress_bar="green1",
-                                                                             progress_bar_finished="green1",
-                                                                             batch_progress="green_yellow",
-                                                                             time="grey82",
-                                                                             processing_speed="grey82",
-                                                                             metrics="grey82",),
+                                                           progress_bar="green1",
+                                                           progress_bar_finished="green1",
+                                                           batch_progress="green_yellow",
+                                                           time="grey82",
+                                                           processing_speed="grey82"
+                                                           ,metrics="grey82",),
         console_kwargs: Optional[dict[str, Any]]= None,
     ) -> None:
         super().__init__(refresh_rate, leave, theme, console_kwargs)
@@ -51,7 +51,7 @@ class MyProgressBar(RichProgressBar):
     def on_train_start(self, trainer: Trainer, pl_module: LightningModule) -> None:
         super().on_train_start(trainer, pl_module)
 
-        total_epochs = trainer.max_epochs
+        total_epochs = trainer.max_epochs if trainer.max_epochs is not None else 0
         epochs_description = "💪 [green_yellow]Training"
 
         if self.epoch_progress_bar_id is not None and self._leave:
