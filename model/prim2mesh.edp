@@ -8,35 +8,20 @@ real L = 30. - xstart;
 real h = 5.;
 real margin = 2.;
 
-func string typoTmpSave(string path, string name, int epoch){
-    string title;
-    if (epoch<10){
-        title = path + "/tmp/" + name + ".vtk";
-    }
-    else if (epoch<100) {
-        title = path + "/tmp/" + name + ".vtk";
-    }
-    else {
-        title = path + "/tmp/" + name + ".vtk";
-    }
-    return title;
-}
-
 func string typoTitle(string path, string name, int epoch){
     string title;
     if (epoch<10){
-        title = path + "/pred/" + name + "/" + name + "_pred_00" + epoch + ".vtk";
+        title = path + "/tmp/" + "/" + name + "_pred_00" + epoch + ".vtk";
     }
     else if (epoch<100) {
-        title = path + "/pred/" + name + "/" + name + "_pred_0" + epoch + ".vtk";
+        title = path + "/tmp/" + "/" + name + "_pred_0" + epoch + ".vtk";
     }
     else {
-        title = path + "/pred/" + name + "/" + name + "_pred_" + epoch + ".vtk";
+        title = path + "/tmp/" + "/" + name + "_pred_" + epoch + ".vtk";
     }
     return title;
 }
 
-int train = importInt("train");
 int epoch = importInt("epoch");
 
 string path = importString("path");
@@ -68,9 +53,4 @@ border b(t=0, 1.0; i)
 
 mesh ThPred = buildmesh(b(points));
 
-if (train) {
-    savevtk(typoTmpSave(path, name, epoch), ThPred, bin=false);
-}
-else {
-    savevtk(typoTitle(path, name, epoch), ThPred, bin=false);
-}
+savevtk(typoTitle(path, name, epoch), ThPred, bin=false);

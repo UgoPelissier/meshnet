@@ -5,12 +5,12 @@ import os.path as osp
 import shutil
 
 from utils.utils import load_train_val_test_index, get_next_version
-from model.loss import projection_loss
+from model.mesh import post_process
 
 import torch
 import torch.nn.functional as F
 import lightning.pytorch as pl
-from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
+from lightning.pytorch.cli import OptimizerCallable, LRSchedulerCallable
 
 
 class LightningNet(pl.LightningModule):
@@ -50,38 +50,31 @@ class LightningNet(pl.LightningModule):
         x = F.relu(self.layer2(x))
         x = self.layer3(x)
         return x
+    
+    def on_train_start(self):
+        """Set up folders for validation and test sets"""
+        if self.trainer.global_rank == 0:
+            if not osp.exists(self.val_folder):
+                os.makedirs(self.val_folder)
+                os.makedirs(osp.join(self.val_folder, "pred"))
+                os.makedirs(osp.join(self.val_folder, "error"))
+                os.makedirs(osp.join(self.val_folder, "true"))
+                os.makedirs(osp.join(self.val_folder, "tmp"))
 
-    def init_folder(self, folder: str) -> None:
-        """Initialize the folder for the validation and test."""
-        if not osp.exists(folder):
-            os.makedirs(folder)
-            os.makedirs(osp.join(folder, "pred"))
-            os.makedirs(osp.join(folder, "true"))
-            os.makedirs(osp.join(folder, "tmp"))
-
-            for sample in self.val_idx:
-                os.makedirs(osp.join(folder, "pred", f'stokes_{sample:03}'))
-                shutil.copyfile(
-                    osp.join(self.dataset, 'raw', 'sol', f'stokes_{sample:03}.vtu'),
-                    osp.join(folder, "true", f'stokes_{sample:03}.vtu')
-                )
+                for sample in self.val_idx:
+                    os.makedirs(osp.join(self.val_folder, "pred", f'stokes_{sample:03}'))
+                    os.makedirs(osp.join(self.val_folder, "error", f'stokes_{sample:03}'))
+                    shutil.copyfile(
+                        osp.join(self.dataset, 'raw', 'sol', f'stokes_{sample:03}.vtu'),
+                        osp.join(self.val_folder, "true", f'stokes_{sample:03}.vtu')
+                    )
 
     def training_step(self, batch, batch_idx: int) -> torch.Tensor:
         """Training step of the model."""
-        if self.trainer.global_rank == 0:
-            self.init_folder(folder=self.val_folder)
-
-        loss_proj = 0
         preds = self(batch)
-        sizes = (batch.ptr[1:] - batch.ptr[:-1]).tolist()
-
-        for pred, x, pos, name in zip(preds.split(sizes), batch.x.split(sizes), batch.pos.split(sizes), batch.name.split([1]*batch.name.shape[0])):
-                loss_proj += projection_loss(pred, x, pos, "stokes_{:03d}".format(name.item()), self.path, self.dataset, self.val_folder)
-                    
         loss = F.mse_loss(preds, batch.y.unsqueeze(dim=-1))
 
         self.log("train/loss", loss, on_step=False, on_epoch=True, prog_bar=True, logger=True, batch_size=batch.x.shape[0])
-        self.log("train/projection_loss", loss_proj, on_step=False, on_epoch=True, prog_bar=True, logger=True, batch_size=batch.x.shape[0])
         self.log("train/lr", self.trainer.optimizers[0].param_groups[0]['lr'], on_step=False, on_epoch=True, prog_bar=False, logger=True, batch_size=batch.x.shape[0])
 
         return loss
@@ -89,40 +82,15 @@ class LightningNet(pl.LightningModule):
     def validation_step(self, batch, batch_idx: int) -> torch.Tensor:
         """Validation step of the model."""
         preds = self(batch)
-        sizes = (batch.ptr[1:] - batch.ptr[:-1]).tolist()
-        loss_proj = 0
-
-        for pred, x, pos, name in zip(preds.split(sizes), batch.x.split(sizes), batch.pos.split(sizes), batch.name.split([1]*batch.name.shape[0])):
-            for sample in self.val_idx:
-                if (name==sample):
-                    loss_proj += projection_loss(pred, x, pos, "stokes_{:03d}".format(name.item()), self.path, self.dataset, self.val_folder, test=True, epoch=self.trainer.current_epoch)
-
         loss = F.mse_loss(preds, batch.y.unsqueeze(dim=-1))
 
         self.log("val/loss", loss, on_step=False, on_epoch=True, prog_bar=False, logger=True, batch_size=batch.x.shape[0])
-        self.log("val/projection_loss", loss_proj, on_step=False, on_epoch=True, prog_bar=False, logger=True, batch_size=batch.x.shape[0])
 
-        return loss
-    
-    def test_step(self, batch, batch_idx: int) -> torch.Tensor:
-        """Test step of the model."""
-        rank = self.trainer.global_rank
-        if rank == 0:
-            self.init_folder(folder=self.test_folder)
-
-        preds = self(batch)
         sizes = (batch.ptr[1:] - batch.ptr[:-1]).tolist()
-        loss_proj = 0
-
         for pred, x, pos, name in zip(preds.split(sizes), batch.x.split(sizes), batch.pos.split(sizes), batch.name.split([1]*batch.name.shape[0])):
-            for sample in self.test_idx:
-                if ((int(name.item()[-7:-4])==sample)):
-                    loss_proj += projection_loss(pred, x, pos, "stokes_{:03d}".format(name.item()), self.path, self.dataset, self.test_folder, test=True, epoch=self.trainer.current_epoch)
-
-        loss = F.mse_loss(preds, batch.y.unsqueeze(dim=-1))
-
-        self.log("test/loss", loss, on_step=False, on_epoch=True, prog_bar=True, logger=True, batch_size=batch.x.shape[0])
-        self.log("test/projection_loss", loss_proj, on_step=False, on_epoch=True, prog_bar=True, logger=True, batch_size=batch.x.shape[0])
+            for sample in self.val_idx:
+                if (name==sample):
+                    post_process(pred, x, pos, "stokes_{:03d}".format(name.item()), self.path, self.dataset, self.val_folder, epoch=self.trainer.current_epoch)
 
         return loss
     
@@ -134,4 +102,4 @@ class LightningNet(pl.LightningModule):
             return [optimizer]
         else:
             lr_scheduler = self.lr_scheduler(optimizer)
-            return {"optimizer": optimizer, "lr_scheduler": lr_scheduler}
+            return [optimizer], [lr_scheduler]
