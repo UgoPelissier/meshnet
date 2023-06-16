@@ -12,12 +12,12 @@ class FreeFemDataModule(pl.LightningDataModule):
     """Lightning data module for the FreeFem dataset."""
     def __init__(
             self,
-            path: str = '/home/upelissier/30-Implements/meshnet/',
-            dataset: str = '/data/users/upelissier/30-Implements/freefem/',
-            val_size: float = 0.1,
-            test_size: float = 0.15,
-            batch_size: int = 8,
-            num_workers: int = 4
+            path: str,
+            dataset: str,
+            val_size: float,
+            test_size: float,
+            batch_size: int,
+            num_workers: int
         ) -> None:
         super().__init__()
         # Define the indices

@@ -1,3 +1,4 @@
+from typing import Optional
 import numpy as np
 import os
 import os.path as osp
@@ -16,14 +17,12 @@ class LightningNet(pl.LightningModule):
     """Lightning module for the MeshNet model."""
     def __init__(
             self,
-            input_channels: int = 7,
-            path: str = '/home/upelissier/30-Implements/meshnet/',
-            dataset: str = '/data/users/upelissier/30-Implements/freefem/',
-            logs: str = '/data/users/upelissier/30-Implements/meshnet/logs/',
-            version: str = None,
-            val_idx: list = None,
-            optimizer: OptimizerCallable = torch.optim.AdamW,
-            lr_scheduler: LRSchedulerCallable = None
+            input_channels: int,
+            path: str,
+            dataset: str,
+            logs: str,
+            optimizer: OptimizerCallable,
+            lr_scheduler: Optional[LRSchedulerCallable] = None
         ) -> None:
         super().__init__()
         
@@ -36,18 +35,11 @@ class LightningNet(pl.LightningModule):
         self.dataset = dataset
         self.logs = logs
 
-        if version is None:
-            self.version = f'version_{get_next_version(path=self.logs)}'
-        else:
-            self.version = version
-
+        self.version = f'version_{get_next_version(path=self.logs)}'
         self.val_folder = osp.join(self.logs, self.version, 'val')
         self.test_folder = osp.join(self.logs, self.version, 'test')
 
-        if val_idx is None:
-            _, self.val_idx, self.test_idx = load_train_val_test_index(path=self.path)
-        else:
-            self.val_idx = val_idx
+        _, self.val_idx, self.test_idx = load_train_val_test_index(path=self.path)
 
         self.optimizer = optimizer
         self.lr_scheduler = lr_scheduler

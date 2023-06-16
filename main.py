@@ -21,14 +21,27 @@ class MyLightningCLI(LightningCLI):
         logger = {
             "class_path": "lightning.pytorch.loggers.TensorBoardLogger",
             "init_args": {
-                "save_dir": "/data/users/upelissier/30-Implements/meshnet/",
+                "save_dir": "/root/safran/data/", # "/data/users/upelissier/30-Implements/meshnet/"
                 "name": "logs/",
             },
         }
         parser.set_defaults(
             {
+                "data.path": "/root/safran/meshnet/", # "/home/upelissier/30-Implements/meshnet/"
+                "data.dataset": "/root/safran/data/", # "/data/users/upelissier/30-Implements/freefem/"
+                "data.val_size": 0.1,
+                "data.test_size": 0.15,
+                "data.batch_size": 8,
+                "data.num_workers": 4,
+
+                "model.input_channels": 7,
+                "model.path": "/root/safran/meshnet/", # "/home/upelissier/30-Implements/meshnet/"
+                "model.dataset": "/root/safran/data/", # "/data/users/upelissier/30-Implements/freefem/"
+                "model.logs": "/root/safran/data/logs/", # "/data/users/upelissier/30-Implements/meshnet/logs/"
+                "model.optimizer": "torch.optim.AdamW",
+
                 "trainer.max_epochs": 30,
-                "trainer.accelerator": "gpu",
+                "trainer.accelerator": "cpu",
                 "trainer.devices": 1,
                 "trainer.logger": logger,
                 "trainer.callbacks": default_callbacks,
