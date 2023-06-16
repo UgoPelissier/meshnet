@@ -11,7 +11,7 @@ def train_val_test_split(
         n: int,
         val_size: float,
         test_size: float
-) -> Tuple[np.ndarray, np.ndarray]:
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Split the dataset into train, validation and test sets."""
     indices = np.random.permutation(n)
     train_index, val_index, test_index = indices[:int(n*(1-(val_size+test_size)))], indices[int(n*(1-(val_size+test_size))):int(n*(1-test_size))],  indices[int(n*(1-test_size)):]
