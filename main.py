@@ -47,7 +47,7 @@ class MyLightningCLI(LightningCLI):
                 # "model.logs": "/root/safran/data/logs/", # Logs directory
                 "model.path": "/home/upelissier/30-Code/meshnet/", # Working directory
                 "model.dataset": "/data/users/upelissier/30-Code/freefem/", # Data directory
-                "model.logs": "/data/users/upelissier/30-Code/meshnet/logs/,", # Logs directory
+                "model.logs": "/data/users/upelissier/30-Code/meshnet/logs/", # Logs directory
 
                 "model.optimizer": "torch.optim.AdamW",
 
