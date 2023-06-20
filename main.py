@@ -12,10 +12,10 @@ class MyLightningCLI(LightningCLI):
     def add_arguments_to_parser(self, parser: LightningArgumentParser) -> None:
         default_callbacks = [
             {
-                "class_path": "utils.modelsummary.MyRichModelSummary",
+                "class_path": "callbacks.modelsummary.MyRichModelSummary",
             },
             {
-                "class_path": "utils.progressbar.MyProgressBar",
+                "class_path": "callbacks.progressbar.MyProgressBar",
             }
         ]
 
