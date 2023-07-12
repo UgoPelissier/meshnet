@@ -47,12 +47,13 @@ class MyLightningCLI(LightningCLI):
                 # "model.path": "/home/upelissier/30-Code/meshnet/", # Working directory
                 # "model.dataset": "/data/users/upelissier/30-Code/freefem/", # Data directory
                 # "model.logs": "/data/users/upelissier/30-Code/meshnet/logs/", # Logs directory
-
+                "model.val_size": 0.1,
+                "model.test_size": 0.15,
                 "model.optimizer": "torch.optim.AdamW",
 
                 "trainer.max_epochs": 100,
-                "trainer.accelerator": "cpu",
-                "trainer.devices": 1,
+                "trainer.accelerator": "gpu",
+                "trainer.devices": 2,
                 "trainer.logger": logger,
                 "trainer.callbacks": default_callbacks,
             },
