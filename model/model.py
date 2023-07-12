@@ -1,10 +1,9 @@
 from typing import Optional
-import numpy as np
 import os
 import os.path as osp
 import shutil
 
-from utils.utils import load_train_val_test_index, get_next_version
+from utils.utils import train_val_test_split, get_next_version
 from model.mesh import post_process
 
 import torch
@@ -21,6 +20,8 @@ class LightningNet(pl.LightningModule):
             path: str,
             dataset: str,
             logs: str,
+            val_size: float,
+            test_size: float,
             optimizer: OptimizerCallable,
             lr_scheduler: Optional[LRSchedulerCallable] = None
         ) -> None:
@@ -39,7 +40,7 @@ class LightningNet(pl.LightningModule):
         self.val_folder = osp.join(self.logs, self.version, 'val')
         self.test_folder = osp.join(self.logs, self.version, 'test')
 
-        _, self.val_idx, self.test_idx = load_train_val_test_index(path=self.path)
+        self.train_idx, self.val_idx, self.test_idx = train_val_test_split(path=path, n=len(os.listdir(osp.join(dataset, "raw", "data"))), val_size=val_size, test_size=test_size)
 
         self.optimizer = optimizer
         self.lr_scheduler = lr_scheduler
@@ -54,19 +55,19 @@ class LightningNet(pl.LightningModule):
     def on_train_start(self):
         """Set up folders for validation and test sets"""
         if self.trainer.global_rank == 0:
-            if not osp.exists(self.val_folder):
-                os.makedirs(self.val_folder)
-                os.makedirs(osp.join(self.val_folder, "pred"))
-                os.makedirs(osp.join(self.val_folder, "error"))
-                os.makedirs(osp.join(self.val_folder, "true"))
-                os.makedirs(osp.join(self.val_folder, "tmp"))
+            if not osp.exists(self.test_folder):
+                os.makedirs(self.test_folder)
+                os.makedirs(osp.join(self.test_folder, "pred"))
+                os.makedirs(osp.join(self.test_folder, "error"))
+                os.makedirs(osp.join(self.test_folder, "true"))
+                os.makedirs(osp.join(self.test_folder, "tmp"))
 
-                for sample in self.val_idx:
-                    os.makedirs(osp.join(self.val_folder, "pred", f'stokes_{sample:03}'))
-                    os.makedirs(osp.join(self.val_folder, "error", f'stokes_{sample:03}'))
+                for sample in self.test_idx:
+                    os.makedirs(osp.join(self.test_folder, "pred", f'stokes_{sample:03}'))
+                    os.makedirs(osp.join(self.test_folder, "error", f'stokes_{sample:03}'))
                     shutil.copyfile(
                         osp.join(self.dataset, 'raw', 'sol', f'stokes_{sample:03}.vtu'),
-                        osp.join(self.val_folder, "true", f'stokes_{sample:03}.vtu')
+                        osp.join(self.test_folder, "true", f'stokes_{sample:03}.vtu')
                     )
 
     def training_step(self, batch, batch_idx: int) -> torch.Tensor:
@@ -86,11 +87,20 @@ class LightningNet(pl.LightningModule):
 
         self.log("val/loss", loss, on_step=False, on_epoch=True, prog_bar=False, logger=True, batch_size=batch.x.shape[0])
 
+        return loss
+    
+    def test_step(self, batch, batch_idx: int) -> torch.Tensor:
+        """Validation step of the model."""
+        preds = self(batch)
+        loss = F.mse_loss(preds, batch.y.unsqueeze(dim=-1))
+
+        self.log("test/loss", loss, on_step=False, on_epoch=True, prog_bar=False, logger=True, batch_size=batch.x.shape[0])
+
         sizes = (batch.ptr[1:] - batch.ptr[:-1]).tolist()
         for pred, x, pos, name in zip(preds.split(sizes), batch.x.split(sizes), batch.pos.split(sizes), batch.name.split([1]*batch.name.shape[0])):
-            for sample in self.val_idx:
+            for sample in self.test_idx:
                 if (name==sample):
-                    post_process(pred, x, pos, "stokes_{:03d}".format(name.item()), self.path, self.dataset, self.val_folder, epoch=self.trainer.current_epoch)
+                    post_process(pred, x, pos, "stokes_{:03d}".format(name.item()), self.path, self.dataset, self.test_folder, epoch=self.trainer.current_epoch)
 
         return loss
     
