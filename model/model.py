@@ -52,23 +52,21 @@ class LightningNet(pl.LightningModule):
         x = self.layer3(x)
         return x
     
-    def on_train_start(self):
+    def on_test_start(self):
         """Set up folders for validation and test sets"""
-        if self.trainer.global_rank == 0:
-            if not osp.exists(self.test_folder):
-                os.makedirs(self.test_folder)
-                os.makedirs(osp.join(self.test_folder, "pred"))
-                os.makedirs(osp.join(self.test_folder, "error"))
-                os.makedirs(osp.join(self.test_folder, "true"))
-                os.makedirs(osp.join(self.test_folder, "tmp"))
+        os.makedirs(self.test_folder, exist_ok=True)
+        os.makedirs(osp.join(self.test_folder, "pred"), exist_ok=True)
+        os.makedirs(osp.join(self.test_folder, "error"), exist_ok=True)
+        os.makedirs(osp.join(self.test_folder, "true"), exist_ok=True)
+        os.makedirs(osp.join(self.test_folder, "tmp"), exist_ok=True)
 
-                for sample in self.test_idx:
-                    os.makedirs(osp.join(self.test_folder, "pred", f'stokes_{sample:03}'))
-                    os.makedirs(osp.join(self.test_folder, "error", f'stokes_{sample:03}'))
-                    shutil.copyfile(
-                        osp.join(self.dataset, 'raw', 'sol', f'stokes_{sample:03}.vtu'),
-                        osp.join(self.test_folder, "true", f'stokes_{sample:03}.vtu')
-                    )
+        for sample in self.test_idx:
+            os.makedirs(osp.join(self.test_folder, "pred", f'stokes_{sample:03}'))
+            os.makedirs(osp.join(self.test_folder, "error", f'stokes_{sample:03}'))
+            shutil.copyfile(
+                osp.join(self.dataset, 'raw', 'sol', f'stokes_{sample:03}.vtu'),
+                osp.join(self.test_folder, "true", f'stokes_{sample:03}.vtu')
+            )
 
     def training_step(self, batch, batch_idx: int) -> torch.Tensor:
         """Training step of the model."""
