@@ -11,13 +11,13 @@ real margin = 2.;
 func string typoTitle(string path, string name, int epoch){
     string title;
     if (epoch<10){
-        title = path + "/tmp/" + "/" + name + "_pred_00" + epoch + ".vtk";
+        title = path + "/tmp/" + name + "_pred_00" + epoch + ".vtk";
     }
     else if (epoch<100) {
-        title = path + "/tmp/" + "/" + name + "_pred_0" + epoch + ".vtk";
+        title = path + "/tmp/" + name + "_pred_0" + epoch + ".vtk";
     }
     else {
-        title = path + "/tmp/" + "/" + name + "_pred_" + epoch + ".vtk";
+        title = path + "/tmp/" + name + "_pred_" + epoch + ".vtk";
     }
     return title;
 }
