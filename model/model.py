@@ -40,7 +40,7 @@ class LightningNet(pl.LightningModule):
         self.val_folder = osp.join(self.logs, self.version, 'val')
         self.test_folder = osp.join(self.logs, self.version, 'test')
 
-        self.train_idx, self.val_idx, self.test_idx = train_val_test_split(path=path, n=len(os.listdir(osp.join(dataset, "raw", "data"))), val_size=val_size, test_size=test_size)
+        self.train_idx, self.val_idx, self.test_idx = train_val_test_split(path=path, n=len(os.listdir(osp.join(dataset, "raw", "cad"))), val_size=val_size, test_size=test_size)
 
         self.optimizer = optimizer
         self.lr_scheduler = lr_scheduler
