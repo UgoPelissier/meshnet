@@ -32,7 +32,7 @@ class MyLightningCLI(LightningCLI):
                 # "data.path": "/home/eleve05/safran/meshnet/", # Working directory
                 # "data.dataset": "/home/eleve05/safran/meshnet/data", # Data directory
                 "data.path": "/home/upelissier/30-Code/meshnet/", # Working directory
-                "data.dataset": "/data/users/upelissier/30-Code/data/stokes/", # Data directory
+                "data.dataset": "/data/users/upelissier/30-Code/meshnet/data/stokes/", # Data directory
 
                 "data.val_size": 0.1,
                 "data.test_size": 0.15,
@@ -45,7 +45,7 @@ class MyLightningCLI(LightningCLI):
                 # "model.dataset": "/home/eleve05/safran/meshnet/data/", # Data directory
                 # "model.logs": "/home/eleve05/safran/meshnet/logs/", # Logs directory
                 "model.path": "/home/upelissier/30-Code/meshnet/", # Working directory
-                "model.dataset": "/data/users/upelissier/30-Code/data/stokes/", # Data directory
+                "model.dataset": "/data/users/upelissier/30-Code/meshnet/data/stokes/", # Data directory
                 "model.logs": "/data/users/upelissier/30-Code/meshnet/logs/", # Logs directory
                 "model.val_size": 0.1,
                 "model.test_size": 0.15,
