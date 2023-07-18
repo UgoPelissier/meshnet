@@ -76,7 +76,7 @@ class FreeFem(InMemoryDataset):
             self,
             name: str
     ) -> Data:
-        df = pd.read_csv(osp.join(f'{self.raw_dir}/data/{name}.txt'), sep='\t')
+        df = pd.read_csv(osp.join(f'{self.raw_dir}/cad/{name}.txt'), sep='\t')
         df['length'] = self.length(df)
         df['orientation'] = np.sign(df['n'])
         
