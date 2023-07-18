@@ -8,22 +8,6 @@ real L = 30. - xstart;
 real h = 5.;
 real margin = 2.;
 
-func string typoTitle(string path, string name, int epoch){
-    string title;
-    if (epoch<10){
-        title = path + "/tmp/" + name + "_pred_00" + epoch + ".vtk";
-    }
-    else if (epoch<100) {
-        title = path + "/tmp/" + name + "_pred_0" + epoch + ".vtk";
-    }
-    else {
-        title = path + "/tmp/" + name + "_pred_" + epoch + ".vtk";
-    }
-    return title;
-}
-
-int epoch = importInt("epoch");
-
 string path = importString("path");
 string name = importString("name");
 
@@ -53,4 +37,5 @@ border b(t=0, 1.0; i)
 
 mesh ThPred = buildmesh(b(points));
 
-savevtk(typoTitle(path, name, epoch), ThPred, bin=false);
+title = path + "/mesh/" + name + "_pred.msh";
+savemesh(Th, title);

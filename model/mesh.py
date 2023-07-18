@@ -30,9 +30,8 @@ def mesh(
         x: Tensor,
         pos: Tensor,
         path: str,
-        val_folder: str,
-        name: str,
-        epoch: int
+        save_folder: str,
+        name: str
 ) -> None:
     """Save the mesh prediction in a temporary file."""
     data = torch.hstack((x, pos, pred))
@@ -55,10 +54,9 @@ def mesh(
 
     points = orientation*length/pred
     
-    runner = FreeFemRunner(script=osp.join(path, 'model', 'prim2mesh.edp'), run_dir=osp.join(val_folder, "tmp", name))
+    runner = FreeFemRunner(script=osp.join(path, 'model', 'prim2mesh.edp'), run_dir=osp.join(save_folder, "tmp", name))
     runner.import_variables(
-        epoch=epoch,
-        path=val_folder,
+        path=save_folder,
         name=name,
         type=type,
         tstart=tstart,
@@ -74,7 +72,7 @@ def mesh(
         points=points.long()
         )
     runner.execute()
-    shutil.rmtree(osp.join(val_folder, "tmp", name))
+    shutil.rmtree(osp.join(save_folder, "tmp", name))
 
 def projection(
         dataset: str,
@@ -119,13 +117,12 @@ def post_process(
         name: str,
         path: str,
         dataset: str,
-        val_folder: str,
-        epoch: int
+        save_folder: str
 ) -> None:
     """Compute the projection loss."""
     if (torch.sum(pred<=0)==0):
         try:
-            mesh(pred, x, pos, path, val_folder, name, epoch)
-            projection(dataset, val_folder, name, epoch)
+            mesh(pred, x, pos, path, save_folder, name)
+            # projection(dataset, val_folder, name)
         except Exception:
             pass

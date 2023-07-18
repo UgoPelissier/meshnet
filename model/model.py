@@ -55,18 +55,8 @@ class LightningNet(pl.LightningModule):
     def on_test_start(self):
         """Set up folders for validation and test sets"""
         os.makedirs(self.test_folder, exist_ok=True)
-        os.makedirs(osp.join(self.test_folder, "pred"), exist_ok=True)
-        os.makedirs(osp.join(self.test_folder, "error"), exist_ok=True)
-        os.makedirs(osp.join(self.test_folder, "true"), exist_ok=True)
+        os.makedirs(osp.join(self.test_folder, "mesh"), exist_ok=True)
         os.makedirs(osp.join(self.test_folder, "tmp"), exist_ok=True)
-
-        for sample in self.test_idx:
-            os.makedirs(osp.join(self.test_folder, "pred", f'stokes_{sample:03}'))
-            os.makedirs(osp.join(self.test_folder, "error", f'stokes_{sample:03}'))
-            shutil.copyfile(
-                osp.join(self.dataset, 'raw', 'sol', f'stokes_{sample:03}.vtu'),
-                osp.join(self.test_folder, "true", f'stokes_{sample:03}.vtu')
-            )
 
     def training_step(self, batch, batch_idx: int) -> torch.Tensor:
         """Training step of the model."""
@@ -98,7 +88,7 @@ class LightningNet(pl.LightningModule):
         for pred, x, pos, name in zip(preds.split(sizes), batch.x.split(sizes), batch.pos.split(sizes), batch.name.split([1]*batch.name.shape[0])):
             for sample in self.test_idx:
                 if (name==sample):
-                    post_process(pred, x, pos, "stokes_{:03d}".format(name.item()), self.path, self.dataset, self.test_folder, epoch=self.trainer.current_epoch)
+                    post_process(pred, x, pos, "stokes_{:03d}".format(name.item()), self.path, self.dataset, self.test_folder)
 
         return loss
     
