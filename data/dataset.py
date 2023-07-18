@@ -1,12 +1,14 @@
+import os
 import os.path as osp
+import glob
 from typing import Optional, Callable
 import torch
 import numpy as np
 import pandas as pd
-from torch_geometric.data import InMemoryDataset, Data
+from torch_geometric.data import Dataset, Data
 
 
-class FreeFem(InMemoryDataset):
+class FreeFem(Dataset):
     """FreeFem dataset."""
     def __init__(
             self,
@@ -20,14 +22,6 @@ class FreeFem(InMemoryDataset):
         self.split = split
         self.idx = idx
         super().__init__(root, transform, pre_transform)
-        if (self.split=='train'):
-            self.data, self.slices = torch.load(self.processed_paths[0])
-        elif (self.split=='validation'):
-            self.data, self.slices = torch.load(self.processed_paths[1])
-        elif (self.split=='test'):
-            self.data, self.slices = torch.load(self.processed_paths[2])
-        else:
-            raise ValueError("split must be 'train', 'validation' or 'test'")
 
     @property
     def raw_file_names(self) -> list:
@@ -35,7 +29,7 @@ class FreeFem(InMemoryDataset):
 
     @property
     def processed_file_names(self) -> list:
-        return ["train.pt", "validation.pt", "test.pt"]
+        return glob.glob(os.path.join(self.processed_dir, self.split, 'stokes_*.pt'))
 
     def download(self):
         pass
@@ -75,7 +69,7 @@ class FreeFem(InMemoryDataset):
     def process_file(
             self,
             name: str
-    ) -> Data:
+    ) -> None:
         df = pd.read_csv(osp.join(f'{self.raw_dir}/cad/{name}.txt'), sep='\t')
         df['length'] = self.length(df)
         df['orientation'] = np.sign(df['n'])
@@ -83,22 +77,18 @@ class FreeFem(InMemoryDataset):
         x = torch.tensor(np.array(df.drop(columns=['xstart', 'ystart', 'zstart', 'xend', 'yend', 'zend', 'label', 'n'])), dtype=torch.float32)
         pos = torch.tensor(df[['xstart', 'ystart', 'zstart', 'xend', 'yend', 'zend']].values)
         y = torch.abs(torch.tensor(df['length']/df['n'], dtype=torch.float32))
-        name = torch.tensor(int(name[-3:]), dtype=torch.long)
 
-        return Data(x=x, pos=pos, y=y, name=name)
+        torch.save(Data(x=x, pos=pos, y=y, name=torch.tensor(int(name[-3:]), dtype=torch.long)), osp.join(self.processed_dir, self.split, f'{name}.pt'))
 
     def process(self) -> None:
-        data_list = []
+        """Process the dataset."""
+        os.makedirs(os.path.join(self.processed_dir, self.split), exist_ok=True)
         for name in self.raw_file_names:
+            self.process_file(name)
 
-            data = self.process_file(name)
-
-            if self.pre_filter is not None and not self.pre_filter(data):
-                continue
-
-            if self.pre_transform is not None:
-                data = self.pre_transform(data)
-
-            data_list.append(data)
-
-        torch.save(self.collate(data_list), osp.join(self.processed_dir, f'{self.split}.pt'))
+    def len(self) -> int:
+        return len(self.processed_file_names)
+    
+    def get(self, idx: int) -> Data:
+        data = torch.load(os.path.join(self.processed_dir, self.split, "stokes_{:03d}.pt".format(self.idx[idx])))
+        return data
