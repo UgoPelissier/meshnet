@@ -5,6 +5,7 @@ from typing import Optional, Callable
 import torch
 import numpy as np
 import pandas as pd
+from alive_progress import alive_bar
 from torch_geometric.data import Dataset, Data
 
 
@@ -83,8 +84,10 @@ class FreeFem(Dataset):
     def process(self) -> None:
         """Process the dataset."""
         os.makedirs(os.path.join(self.processed_dir, self.split), exist_ok=True)
-        for name in self.raw_file_names:
-            self.process_file(name)
+        with alive_bar(total=len(self.processed_file_names)) as bar:
+            for name in self.raw_file_names:
+                self.process_file(name)
+                bar()
 
     def len(self) -> int:
         return len(self.processed_file_names)
