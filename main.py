@@ -21,18 +21,18 @@ class MyLightningCLI(LightningCLI):
         logger = {
             "class_path": "lightning.pytorch.loggers.TensorBoardLogger",
             "init_args": {
-                "save_dir": "/home/eleve05/safran/meshnet/", # Parent directory of logs folder
-                # "save_dir": "/data/users/upelissier/30-Code/meshnet/", # Parent directory of logs folder
+                # "save_dir": "/home/eleve05/safran/meshnet/", # Parent directory of logs folder
+                "save_dir": "/data/users/upelissier/30-Code/meshnet/", # Parent directory of logs folder
                 "name": "logs/",
             },
         }
 
         parser.set_defaults(
             {
-                "data.path": "/home/eleve05/safran/meshnet/", # Working directory
-                "data.dataset": "/home/eleve05/safran/meshnet/data", # Data directory
-                # "data.path": "/home/upelissier/30-Code/meshnet/", # Working directory
-                # "data.dataset": "/data/users/upelissier/30-Code/freefem/", # Data directory
+                # "data.path": "/home/eleve05/safran/meshnet/", # Working directory
+                # "data.dataset": "/home/eleve05/safran/meshnet/data", # Data directory
+                "data.path": "/home/upelissier/30-Code/meshnet/", # Working directory
+                "data.dataset": "/data/users/upelissier/40-Data/stokes/", # Data directory
 
                 "data.val_size": 0.1,
                 "data.test_size": 0.15,
@@ -41,12 +41,12 @@ class MyLightningCLI(LightningCLI):
 
                 "model.input_channels": 7,
 
-                "model.path": "/home/eleve05/safran/meshnet/", # Working directory
-                "model.dataset": "/home/eleve05/safran/meshnet/data/", # Data directory
-                "model.logs": "/home/eleve05/safran/meshnet/logs/", # Logs directory
-                # "model.path": "/home/upelissier/30-Code/meshnet/", # Working directory
-                # "model.dataset": "/data/users/upelissier/30-Code/freefem/", # Data directory
-                # "model.logs": "/data/users/upelissier/30-Code/meshnet/logs/", # Logs directory
+                # "model.path": "/home/eleve05/safran/meshnet/", # Working directory
+                # "model.dataset": "/home/eleve05/safran/meshnet/data/", # Data directory
+                # "model.logs": "/home/eleve05/safran/meshnet/logs/", # Logs directory
+                "model.path": "/home/upelissier/30-Code/meshnet/", # Working directory
+                "model.dataset": "/data/users/upelissier/40-Data/stokes/", # Data directory
+                "model.logs": "/data/users/upelissier/30-Code/meshnet/logs/", # Logs directory
                 "model.val_size": 0.1,
                 "model.test_size": 0.15,
                 "model.optimizer": "torch.optim.AdamW",
