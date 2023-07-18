@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-wdir=/home/eleve05/safran/graphnet
-ckpt_path=/home/eleve05/safran/graphnet/logs/version_7/checkpoints/epoch=900-step=169388.ckpt
+wdir=/home/upelissier/30-Code/meshnet
+ckpt_path=/home/upelissier/30-Code/meshnet/logs/version_0/checkpoints/epoch=99-step=1000.ckpt
 
 cd $wdir
 clear
