@@ -1,6 +1,6 @@
 IMPORT "io.edp"
-
 load "iovtk"
+load "msh3"
 
 real rstart = 0.75;
 real xstart = -5.;
@@ -39,3 +39,6 @@ mesh ThPred = buildmesh(b(points));
 
 string title = path + "/mesh/" + name + "_pred.msh";
 savemesh(ThPred, title);
+
+title = path + "/vtu/" + name + "_pred.vtu";
+savevtk(title, ThPred, bin=false);

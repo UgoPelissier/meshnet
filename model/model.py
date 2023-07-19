@@ -56,6 +56,7 @@ class LightningNet(pl.LightningModule):
         """Set up folders for validation and test sets"""
         os.makedirs(self.test_folder, exist_ok=True)
         os.makedirs(osp.join(self.test_folder, "mesh"), exist_ok=True)
+        os.makedirs(osp.join(self.test_folder, "vtu"), exist_ok=True)
         os.makedirs(osp.join(self.test_folder, "tmp"), exist_ok=True)
 
     def training_step(self, batch, batch_idx: int) -> torch.Tensor:
@@ -88,7 +89,7 @@ class LightningNet(pl.LightningModule):
         for pred, x, pos, name in zip(preds.split(sizes), batch.x.split(sizes), batch.pos.split(sizes), batch.name.split([1]*batch.name.shape[0])):
             for sample in self.test_idx:
                 if (name==sample):
-                    post_process(pred, x, pos, "stokes_{:03d}".format(name.item()), self.wdir, self.dataset, self.test_folder)
+                    post_process(pred, x, pos, "stokes_{:03d}".format(name.item()), self.wdir, self.test_folder)
 
         return loss
     

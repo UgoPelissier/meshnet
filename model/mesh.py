@@ -115,14 +115,12 @@ def post_process(
         x: Tensor,
         pos: Tensor,
         name: str,
-        path: str,
-        dataset: str,
+        wdir: str,
         save_folder: str
 ) -> None:
     """Compute the projection loss."""
     if (torch.sum(pred<=0)==0):
         try:
-            mesh(pred, x, pos, path, save_folder, name)
-            # projection(dataset, val_folder, name)
+            mesh(pred, x, pos, wdir, save_folder, name)
         except Exception:
             pass
