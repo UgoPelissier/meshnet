@@ -37,5 +37,5 @@ border b(t=0, 1.0; i)
 
 mesh ThPred = buildmesh(b(points));
 
-title = path + "/mesh/" + name + "_pred.msh";
-savemesh(Th, title);
+string title = path + "/mesh/" + name + "_pred.msh";
+savemesh(ThPred, title);
