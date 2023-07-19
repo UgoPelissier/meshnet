@@ -17,8 +17,8 @@ class LightningNet(pl.LightningModule):
     def __init__(
             self,
             input_channels: int,
-            path: str,
-            dataset: str,
+            wdir: str,
+            data_dir: str,
             logs: str,
             val_size: float,
             test_size: float,
@@ -32,15 +32,15 @@ class LightningNet(pl.LightningModule):
         self.layer2 = torch.nn.Linear(128, 256)
         self.layer3 = torch.nn.Linear(256, 1)
 
-        self.path = path
-        self.dataset = dataset
+        self.wdir = wdir
+        self.dataset = data_dir
         self.logs = logs
 
         self.version = f'version_{get_next_version(path=self.logs)}'
         self.val_folder = osp.join(self.logs, self.version, 'val')
         self.test_folder = osp.join(self.logs, self.version, 'test')
 
-        self.train_idx, self.val_idx, self.test_idx = train_val_test_split(path=path, n=len(os.listdir(osp.join(dataset, "raw", "cad"))), val_size=val_size, test_size=test_size)
+        self.train_idx, self.val_idx, self.test_idx = train_val_test_split(path=data_dir, n=len(os.listdir(osp.join(data_dir, "raw", "cad"))), val_size=val_size, test_size=test_size)
 
         self.optimizer = optimizer
         self.lr_scheduler = lr_scheduler
@@ -88,7 +88,7 @@ class LightningNet(pl.LightningModule):
         for pred, x, pos, name in zip(preds.split(sizes), batch.x.split(sizes), batch.pos.split(sizes), batch.name.split([1]*batch.name.shape[0])):
             for sample in self.test_idx:
                 if (name==sample):
-                    post_process(pred, x, pos, "stokes_{:03d}".format(name.item()), self.path, self.dataset, self.test_folder)
+                    post_process(pred, x, pos, "stokes_{:03d}".format(name.item()), self.wdir, self.dataset, self.test_folder)
 
         return loss
     

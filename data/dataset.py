@@ -84,6 +84,7 @@ class FreeFem(Dataset):
     def process(self) -> None:
         """Process the dataset."""
         os.makedirs(os.path.join(self.processed_dir, self.split), exist_ok=True)
+        print(f'{self.split} dataset')
         with alive_bar(total=len(self.processed_file_names)) as bar:
             for name in self.raw_file_names:
                 self.process_file(name)

@@ -15,15 +15,15 @@ def train_val_test_split(
     """Split the dataset into train, validation and test sets."""
     indices = np.random.permutation(n)
     train_index, val_index, test_index = indices[:int(n*(1-(val_size+test_size)))], indices[int(n*(1-(val_size+test_size))):int(n*(1-test_size))],  indices[int(n*(1-test_size)):]
-    np.savetxt(osp.join(path, 'data', 'indices', 'train_index.txt'), train_index, fmt='%i')
-    np.savetxt(osp.join(path, 'data', 'indices', 'val_index.txt'), val_index, fmt='%i')
-    np.savetxt(osp.join(path, 'data', 'indices', 'test_index.txt'), test_index, fmt='%i')
+    np.savetxt(osp.join(path, 'indices', 'train_index.txt'), train_index, fmt='%i')
+    np.savetxt(osp.join(path, 'indices', 'val_index.txt'), val_index, fmt='%i')
+    np.savetxt(osp.join(path, 'indices', 'test_index.txt'), test_index, fmt='%i')
     return train_index, val_index, test_index
 
 
 def load_train_val_test_index(path: str) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Load the train, validation and test sets indices."""
-    return np.loadtxt(osp.join(path, 'data', 'indices', 'train_index.txt'), dtype=int), np.loadtxt(osp.join(path, 'data', 'indices', 'val_index.txt'), dtype=int), np.loadtxt(osp.join(path, 'data', 'indices', 'test_index.txt'), dtype=int)
+    return np.loadtxt(osp.join(path, 'indices', 'train_index.txt'), dtype=int), np.loadtxt(osp.join(path, 'indices', 'val_index.txt'), dtype=int), np.loadtxt(osp.join(path, 'indices', 'test_index.txt'), dtype=int)
 
 
 def get_next_version(path: str) -> int:

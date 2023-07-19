@@ -12,8 +12,7 @@ class FreeFemDataModule(pl.LightningDataModule):
     """Lightning data module for the FreeFem dataset."""
     def __init__(
             self,
-            path: str,
-            dataset: str,
+            data_dir: str,
             val_size: float,
             test_size: float,
             batch_size: int,
@@ -21,12 +20,12 @@ class FreeFemDataModule(pl.LightningDataModule):
         ) -> None:
         super().__init__()
         # Define the indices
-        self.train_idx, self.val_idx, self.test_idx = train_val_test_split(path=path, n=len(os.listdir(osp.join(dataset, "raw", "cad"))), val_size=val_size, test_size=test_size)
+        self.train_idx, self.val_idx, self.test_idx = train_val_test_split(path=data_dir, n=len(os.listdir(osp.join(data_dir, "raw", "cad"))), val_size=val_size, test_size=test_size)
 
         # Define the dataset
-        self.train_dataset = FreeFem(root=dataset, split='train', idx=self.train_idx)
-        self.val_dataset = FreeFem(root=dataset, split='validation', idx=self.val_idx)
-        self.test_dataset = FreeFem(root=dataset, split='test', idx=self.test_idx)
+        self.train_dataset = FreeFem(root=data_dir, split='train', idx=self.train_idx)
+        self.val_dataset = FreeFem(root=data_dir, split='validation', idx=self.val_idx)
+        self.test_dataset = FreeFem(root=data_dir, split='test', idx=self.test_idx)
 
         # Define the parameters
         self.batch_size = batch_size
