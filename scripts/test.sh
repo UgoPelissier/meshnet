@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-wdir=/home/upelissier/30-Code/meshnet
-ckpt_path=/home/upelissier/30-Code/meshnet/logs/version_0/checkpoints/epoch=99-step=1000.ckpt
+wdir=/gpfs_new/home/upelissier/30-Code/meshnet
+ckpt_path=/data/users/upelissier/30-Code/meshnet/logs/version_0/checkpoints/epoch=99-step=1000.ckpt
 
 cd $wdir
 clear
