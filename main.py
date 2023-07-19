@@ -1,5 +1,5 @@
 from data.datamodule import FreeFemDataModule
-from model.model import LightningNet
+from model.module import MeshNet
 
 from lightning.pytorch.cli import LightningCLI, LightningArgumentParser
 import warnings
@@ -59,7 +59,7 @@ class MyLightningCLI(LightningCLI):
 
 if __name__ == '__main__':
     cli = MyLightningCLI(
-        model_class=LightningNet,
+        model_class=MeshNet,
         datamodule_class=FreeFemDataModule,
         seed_everything_default=42,
     )

@@ -1,7 +1,6 @@
 from typing import Optional
 import os
 import os.path as osp
-import shutil
 
 from utils.utils import train_val_test_split, get_next_version
 from model.mesh import post_process
@@ -12,7 +11,7 @@ import lightning.pytorch as pl
 from lightning.pytorch.cli import OptimizerCallable, LRSchedulerCallable
 
 
-class LightningNet(pl.LightningModule):
+class MeshNet(pl.LightningModule):
     """Lightning module for the MeshNet model."""
     def __init__(
             self,
