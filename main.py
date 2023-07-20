@@ -1,5 +1,5 @@
-from data.datamodule import FreeFemDataModule
-from model.module import MeshNet
+from meshnet.data.datamodule import FreeFemDataModule
+from meshnet.model.module import MeshNet
 
 from lightning.pytorch.cli import LightningCLI, LightningArgumentParser
 import warnings

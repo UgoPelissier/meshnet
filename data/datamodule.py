@@ -1,8 +1,8 @@
 import os
 import os.path as osp
 
-from utils.utils import train_val_test_split
-from data.dataset import FreeFem
+from meshnet.utils.utils import train_val_test_split
+from meshnet.data.dataset import FreeFem
 
 from torch_geometric.loader import DataLoader
 import lightning.pytorch as pl

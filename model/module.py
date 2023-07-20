@@ -2,8 +2,8 @@ from typing import Optional
 import os
 import os.path as osp
 
-from utils.utils import train_val_test_split, get_next_version
-from model.mesh import post_process
+from meshnet.utils.utils import train_val_test_split, get_next_version
+from meshnet.model.mesh import post_process
 
 import torch
 import torch.nn.functional as F
