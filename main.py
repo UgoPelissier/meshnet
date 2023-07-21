@@ -21,7 +21,6 @@ class MyLightningCLI(LightningCLI):
         logger = {
             "class_path": "lightning.pytorch.loggers.TensorBoardLogger",
             "init_args": {
-                # "save_dir": "/home/eleve05/safran/meshnet/", # Parent directory of logs folder
                 "save_dir": "/data/users/upelissier/30-Code/meshnet/", # Parent directory of logs folder
                 "name": "logs/",
             },
@@ -29,7 +28,6 @@ class MyLightningCLI(LightningCLI):
 
         parser.set_defaults(
             {
-                # "data.data_dir": "/home/eleve05/safran/meshnet/data", # Data directory
                 "data.data_dir": "/data/users/upelissier/30-Code/meshnet/data/stokes/", # Data directory
 
                 "data.val_size": 0.1,
@@ -39,9 +37,6 @@ class MyLightningCLI(LightningCLI):
 
                 "model.input_channels": 7,
 
-                # "model.wdir": "/home/eleve05/safran/meshnet/", # Working directory
-                # "model.data_dir": "/home/eleve05/safran/meshnet/data/", # Data directory
-                # "model.logs": "/home/eleve05/safran/meshnet/logs/", # Logs directory
                 "model.wdir": "/home/upelissier/30-Code/meshnet/", # Working directory
                 "model.data_dir": "/data/users/upelissier/30-Code/meshnet/data/stokes/", # Data directory
                 "model.logs": "/data/users/upelissier/30-Code/meshnet/logs/", # Logs directory
