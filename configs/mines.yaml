@@ -9,7 +9,7 @@ trainer:
   logger:
     class_path: lightning.pytorch.loggers.TensorBoardLogger
     init_args:
-      save_dir: /home/eleve05/safran/meshnet/
+      save_dir: /home/eleve05/adaptnet/meshnet/
       name: logs/
       version: null
       log_graph: false
@@ -67,9 +67,9 @@ trainer:
   default_root_dir: null
 model:
   input_channels: 7
-  wdir: /home/eleve05/safran/meshnet/
-  data_dir: /home/eleve05/safran/meshnet/data/stokes/
-  logs: /home/eleve05/safran/meshnet/logs/
+  wdir: /home/eleve05/adaptnet/meshnet/
+  data_dir: /home/eleve05/adaptnet/meshnet/data/stokes/
+  logs: /home/eleve05/adaptnet/meshnet/logs/
   val_size: 0.15
   test_size: 0.1
   optimizer:
@@ -89,7 +89,7 @@ model:
       fused: null
   lr_scheduler: null
 data:
-  data_dir: /home/eleve05/safran/meshnet/data
+  data_dir: /home/eleve05/adaptnet/meshnet/data/stokes/
   val_size: 0.1
   test_size: 0.15
   batch_size: 8
