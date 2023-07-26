@@ -7,6 +7,21 @@ import numpy as np
 import pandas as pd
 from alive_progress import alive_bar
 from torch_geometric.data import Dataset, Data
+import enum
+
+class NodeType(enum.IntEnum):
+    """
+    Define the code for the one-hot vector representing the node types.
+    Note that this is consistent with the codes provided in the original
+    MeshGraphNets study: 
+    https://github.com/deepmind/deepmind-research/tree/master/meshgraphnets
+    """
+    NORMAL = 0
+    INFLOW = 1
+    OUTFLOW = 2
+    WALL_BOUNDARY = 3
+    OBSTACLE = 4
+    SIZE = 5
 
 
 class FreeFem(Dataset):
