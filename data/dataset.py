@@ -39,6 +39,15 @@ class FreeFem(Dataset):
             self,
             name: str
     ) -> None:
+        with open(osp.join(self.raw_dir, 'geo', f'{name}.geo'), 'r') as f:
+            lines = f.readlines()
+            lines = [line.strip() for line in lines]
+            lines = [line for line in lines if line and not line.startswith('//')]
+            lines = [line for line in lines if not line.startswith('Mesh')]
+            lines = [line for line in lines if not line.startswith('Physical')]
+            lines = [line for line in lines if not line.startswith('Field')]
+            lines = [line for line in lines if not line.startswith('Background')]
+
         df = pd.read_csv(osp.join(f'{self.raw_dir}/cad/{name}.txt'), sep='\t')
         df['orientation'] = np.sign(df['n'])
         
