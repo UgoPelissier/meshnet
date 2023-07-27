@@ -72,6 +72,7 @@ class MeshNet(pl.LightningModule):
                                   Linear(hidden_dim, hidden_dim),
                                   ReLU(),
                                   Linear(hidden_dim, output_dim))
+        
         self.optimizer = optimizer
         self.lr_scheduler = lr_scheduler
 
