@@ -4,6 +4,7 @@ import os.path as osp
 
 from meshnet.utils.utils import get_next_version
 from meshnet.data.dataset import NodeType
+from graphnet.model.processor import ProcessorLayer
 from meshnet.model.mesh import post_process
 
 import torch
@@ -79,6 +80,9 @@ class MeshNet(pl.LightningModule):
         self.version = f'version_{get_next_version(path=self.logs)}'
         self.val_folder = osp.join(self.logs, self.version, 'val')
         self.test_folder = osp.join(self.logs, self.version, 'test')
+
+    def build_processor_model(self):
+        return ProcessorLayer
 
     def forward(self, batch: Data) -> torch.Tensor:
         """Forward pass of the model."""
