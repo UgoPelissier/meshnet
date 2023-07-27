@@ -97,24 +97,24 @@ class FreeFem(Dataset):
             edge_index = torch.stack([torch.cat((senders, receivers), dim=0), torch.cat((receivers, senders), dim=0)], dim=0)
 
             # extract node types
-            node_types = torch.zeros(edges.shape[0], dtype=torch.long)
+            edge_types = torch.zeros(edges.shape[0], dtype=torch.long)
             for curve in physical_curves:
                 label = curve.split('(')[1].split('"')[1]
                 lines = curve.split('{')[1].split('}')[0].split(',')
                 for line in lines:
-                    node_types[int(line)-1] = self.node_type(label)
+                    edge_types[int(line)-1] = self.node_type(label)
             tmp = torch.zeros(edges.shape[0], dtype=torch.long)
             for i in range(len(permutation)):
-                tmp[permutation[i]] = node_types[i]
-            node_types = torch.cat((tmp, tmp), dim=0)
-            node_types_one_hot = torch.nn.functional.one_hot(node_types.long(), num_classes=NodeType.SIZE)
+                tmp[permutation[i]] = edge_types[i]
+            edge_types = torch.cat((tmp, tmp), dim=0)
+            edge_types_one_hot = torch.nn.functional.one_hot(edge_types.long(), num_classes=NodeType.SIZE)
 
             # get edge attributes
             u_i = points[edge_index[0]-1][:,:2]
             u_j = points[edge_index[1]-1][:,:2]
             u_ij = torch.Tensor(u_i - u_j)
             u_ij_norm = torch.norm(u_ij, p=2, dim=1, keepdim=True)
-            edge_attr = torch.cat((u_ij, u_ij_norm, node_types_one_hot),dim=-1).type(torch.float)
+            edge_attr = torch.cat((u_ij, u_ij_norm, edge_types_one_hot),dim=-1).type(torch.float)
 
             torch.save(Data(edge_index=edge_index, edge_attr=edge_attr, y=y, name=torch.tensor(int(name[-3:]), dtype=torch.long)), osp.join(self.processed_dir, self.split, f'{name}.pt'))
 
