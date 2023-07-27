@@ -116,7 +116,13 @@ class FreeFem(Dataset):
             u_ij_norm = torch.norm(u_ij, p=2, dim=1, keepdim=True)
             edge_attr = torch.cat((u_ij, u_ij_norm, edge_types_one_hot),dim=-1).type(torch.float)
 
-            torch.save(Data(edge_index=edge_index, edge_attr=edge_attr, y=y, name=torch.tensor(int(name[-3:]), dtype=torch.long)), osp.join(self.processed_dir, self.split, f'{name}.pt'))
+            # get node attributes
+            x = torch.zeros(points.shape[0], NodeType.SIZE)
+            for i in range(edge_index.shape[0]):
+                for j in range(edge_index.shape[1]):
+                    x[edge_index[i,j]-1, edge_types[j]] = 1.0
+
+            torch.save(Data(x=x, edge_index=edge_index, edge_attr=edge_attr, y=y, name=torch.tensor(int(name[-3:]), dtype=torch.long)), osp.join(self.processed_dir, self.split, f'{name}.pt'))
 
     def process(self) -> None:
         """Process the dataset."""
@@ -131,5 +137,5 @@ class FreeFem(Dataset):
         return len(self.processed_file_names)
     
     def get(self, idx: int) -> Data:
-        data = torch.load(os.path.join(self.processed_dir, self.split, "stokes_{:03d}.pt".format(self.idx[idx])))
+        data = torch.load(os.path.join(self.processed_dir, self.split, "cad_{:03d}.pt".format(self.idx[idx])))
         return data
