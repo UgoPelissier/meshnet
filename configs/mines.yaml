@@ -66,12 +66,14 @@ trainer:
   reload_dataloaders_every_n_epochs: 0
   default_root_dir: null
 model:
-  input_channels: 7
   wdir: /home/eleve05/adaptnet/meshnet/
   data_dir: /home/eleve05/adaptnet/meshnet/data/stokes/
   logs: /home/eleve05/adaptnet/meshnet/logs/
-  val_size: 0.15
-  test_size: 0.1
+  num_layers: 15
+  input_dim_node: 5
+  input_dim_edge: 8
+  hidden_dim: 128
+  output_dim: 1
   optimizer:
     class_path: torch.optim.AdamW
     init_args:
@@ -90,8 +92,8 @@ model:
   lr_scheduler: null
 data:
   data_dir: /home/eleve05/adaptnet/meshnet/data/stokes/
-  val_size: 0.1
-  test_size: 0.15
-  batch_size: 8
+  val_size: 0.15
+  test_size: 0.1
+  batch_size: 1
   num_workers: 4
 ckpt_path: null
