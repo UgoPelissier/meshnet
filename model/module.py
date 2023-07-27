@@ -19,6 +19,7 @@ class MeshNet(pl.LightningModule):
             wdir: str,
             data_dir: str,
             logs: str,
+            num_layers: int,
             input_dim_node: int,
             input_dim_edge: int,
             hidden_dim: int,
@@ -31,10 +32,7 @@ class MeshNet(pl.LightningModule):
         self.wdir = wdir
         self.dataset = data_dir
         self.logs = logs
-
-        self.version = f'version_{get_next_version(path=self.logs)}'
-        self.val_folder = osp.join(self.logs, self.version, 'val')
-        self.test_folder = osp.join(self.logs, self.version, 'test')
+        self.num_layers = num_layers
 
         # encoder convert raw inputs into latent embeddings
         self.node_encoder = Sequential(Linear(input_dim_node, hidden_dim),
@@ -75,6 +73,10 @@ class MeshNet(pl.LightningModule):
         
         self.optimizer = optimizer
         self.lr_scheduler = lr_scheduler
+
+        self.version = f'version_{get_next_version(path=self.logs)}'
+        self.val_folder = osp.join(self.logs, self.version, 'val')
+        self.test_folder = osp.join(self.logs, self.version, 'test')
 
     def forward(self, batch) -> torch.Tensor:
         """Forward pass of the model."""
