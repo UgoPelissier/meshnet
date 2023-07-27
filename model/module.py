@@ -129,7 +129,7 @@ class MeshNet(pl.LightningModule):
     def validation_step(self, batch, batch_idx: int) -> torch.Tensor:
         """Validation step of the model."""
         pred = self(batch)
-        loss = loss = self.loss(pred, batch)
+        loss = self.loss(pred, batch)
 
         self.log("val/loss", loss, on_step=False, on_epoch=True, prog_bar=False, logger=True, batch_size=batch.x.shape[0])
 
@@ -138,7 +138,7 @@ class MeshNet(pl.LightningModule):
     def test_step(self, batch, batch_idx: int) -> torch.Tensor:
         """Validation step of the model."""
         preds = self(batch)
-        loss = F.mse_loss(preds, batch.y.unsqueeze(dim=-1))
+        loss = self.loss(preds, batch)
 
         self.log("test/loss", loss, on_step=False, on_epoch=True, prog_bar=False, logger=True, batch_size=batch.x.shape[0])
 
