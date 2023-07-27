@@ -7,6 +7,7 @@ from meshnet.model.mesh import post_process
 
 import torch
 import torch.nn.functional as F
+from torch.nn import Sequential, Linear, ReLU, LayerNorm
 import lightning.pytorch as pl
 from lightning.pytorch.cli import OptimizerCallable, LRSchedulerCallable
 
@@ -15,21 +16,17 @@ class MeshNet(pl.LightningModule):
     """Lightning module for the MeshNet model."""
     def __init__(
             self,
-            input_channels: int,
             wdir: str,
             data_dir: str,
             logs: str,
-            val_size: float,
-            test_size: float,
+            input_dim_node: int,
+            input_dim_edge: int,
+            hidden_dim: int,
+            output_dim: int,
             optimizer: OptimizerCallable,
             lr_scheduler: Optional[LRSchedulerCallable] = None
         ) -> None:
         super().__init__()
-        
-        # Define the model
-        self.layer1 = torch.nn.Linear(input_channels, 128)
-        self.layer2 = torch.nn.Linear(128, 256)
-        self.layer3 = torch.nn.Linear(256, 1)
 
         self.wdir = wdir
         self.dataset = data_dir
@@ -39,16 +36,60 @@ class MeshNet(pl.LightningModule):
         self.val_folder = osp.join(self.logs, self.version, 'val')
         self.test_folder = osp.join(self.logs, self.version, 'test')
 
-        self.train_idx, self.val_idx, self.test_idx = train_val_test_split(path=data_dir, n=len(os.listdir(osp.join(data_dir, "raw", "geo"))), val_size=val_size, test_size=test_size)
+        # encoder convert raw inputs into latent embeddings
+        self.node_encoder = Sequential(Linear(input_dim_node, hidden_dim),
+                                       ReLU(),
+                                       Linear(hidden_dim, hidden_dim),
+                                       ReLU(),
+                                       Linear(hidden_dim, hidden_dim),
+                                       ReLU(),
+                                       Linear(hidden_dim, hidden_dim),
+                                       LayerNorm(hidden_dim))
 
+        self.edge_encoder = Sequential(Linear(input_dim_edge, hidden_dim),
+                                       ReLU(),
+                                       Linear(hidden_dim, hidden_dim),
+                                       ReLU(),
+                                       Linear(hidden_dim, hidden_dim),
+                                       ReLU(),
+                                       Linear(hidden_dim, hidden_dim),
+                                       LayerNorm(hidden_dim))
+
+
+        self.processor = torch.nn.ModuleList()
+        assert (self.num_layers >= 1), 'Number of message passing layers is not >=1'
+
+        processor_layer=self.build_processor_model()
+        for _ in range(self.num_layers):
+            self.processor.append(processor_layer(hidden_dim,hidden_dim))
+
+
+        # decoder: only for node embeddings
+        self.decoder = Sequential(Linear(hidden_dim, hidden_dim),
+                                  ReLU(),
+                                  Linear(hidden_dim, hidden_dim),
+                                  ReLU(),
+                                  Linear(hidden_dim, hidden_dim),
+                                  ReLU(),
+                                  Linear(hidden_dim, output_dim))
         self.optimizer = optimizer
         self.lr_scheduler = lr_scheduler
 
     def forward(self, batch) -> torch.Tensor:
         """Forward pass of the model."""
-        x = F.relu(self.layer1(batch.x))
-        x = F.relu(self.layer2(x))
-        x = self.layer3(x)
+        x, edge_index, edge_attr = batch.x, batch.edge_index, batch.edge_attr
+
+        # node and edge embedding
+        x = self.node_encoder(x)
+        edge_attr = self.edge_encoder(edge_attr)
+
+        # message passing
+        for layer in self.processor:
+            x = layer(x, edge_index, edge_attr)
+
+        # node embedding decoding
+        x = self.decoder(x)
+
         return x
     
     def on_test_start(self):
