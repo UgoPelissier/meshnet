@@ -46,7 +46,7 @@ class MyLightningCLI(LightningCLI):
 
                 "trainer.max_epochs": 100,
                 "trainer.accelerator": "gpu",
-                "trainer.devices": 2,
+                "trainer.devices": 1,
                 "trainer.logger": logger,
                 "trainer.callbacks": default_callbacks,
             },
