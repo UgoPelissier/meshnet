@@ -30,18 +30,19 @@ class MyLightningCLI(LightningCLI):
             {
                 "data.data_dir": "/data/users/upelissier/30-Code/meshnet/data/stokes/", # Data directory
 
-                "data.val_size": 0.1,
-                "data.test_size": 0.15,
-                "data.batch_size": 8,
+                "data.val_size": 0.15,
+                "data.test_size": 0.1,
+                "data.batch_size": 1,
                 "data.num_workers": 4,
-
-                "model.input_channels": 7,
 
                 "model.wdir": "/home/upelissier/30-Code/meshnet/", # Working directory
                 "model.data_dir": "/data/users/upelissier/30-Code/meshnet/data/stokes/", # Data directory
                 "model.logs": "/data/users/upelissier/30-Code/meshnet/logs/", # Logs directory
-                "model.val_size": 0.15,
-                "model.test_size": 0.1,
+                "model.num_layers": 15,
+                "model.input_dim_node": 5,
+                "model.input_dim_edge": 8,
+                "model.hidden_dim": 128,
+                "model.output_dim": 1,
                 "model.optimizer": "torch.optim.AdamW",
 
                 "trainer.max_epochs": 100,
