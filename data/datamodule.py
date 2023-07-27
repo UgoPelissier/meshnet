@@ -20,7 +20,7 @@ class FreeFemDataModule(pl.LightningDataModule):
         ) -> None:
         super().__init__()
         # Define the indices
-        self.train_idx, self.val_idx, self.test_idx = train_val_test_split(path=data_dir, n=len(os.listdir(osp.join(data_dir, "raw", "cad"))), val_size=val_size, test_size=test_size)
+        self.train_idx, self.val_idx, self.test_idx = train_val_test_split(path=data_dir, n=len(os.listdir(osp.join(data_dir, "raw", "geo"))), val_size=val_size, test_size=test_size)
 
         # Define the dataset
         self.train_dataset = FreeFem(root=data_dir, split='train', idx=self.train_idx)

@@ -39,7 +39,7 @@ class MeshNet(pl.LightningModule):
         self.val_folder = osp.join(self.logs, self.version, 'val')
         self.test_folder = osp.join(self.logs, self.version, 'test')
 
-        self.train_idx, self.val_idx, self.test_idx = train_val_test_split(path=data_dir, n=len(os.listdir(osp.join(data_dir, "raw", "cad"))), val_size=val_size, test_size=test_size)
+        self.train_idx, self.val_idx, self.test_idx = train_val_test_split(path=data_dir, n=len(os.listdir(osp.join(data_dir, "raw", "geo"))), val_size=val_size, test_size=test_size)
 
         self.optimizer = optimizer
         self.lr_scheduler = lr_scheduler
