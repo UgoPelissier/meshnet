@@ -2,12 +2,14 @@ from typing import Optional
 import os
 import os.path as osp
 
-from meshnet.utils.utils import train_val_test_split, get_next_version
+from meshnet.utils.utils import get_next_version
+from meshnet.data.dataset import NodeType
 from meshnet.model.mesh import post_process
 
 import torch
 import torch.nn.functional as F
 from torch.nn import Sequential, Linear, ReLU, LayerNorm
+from torch_geometric.data import Data
 import lightning.pytorch as pl
 from lightning.pytorch.cli import OptimizerCallable, LRSchedulerCallable
 
@@ -78,22 +80,34 @@ class MeshNet(pl.LightningModule):
         self.val_folder = osp.join(self.logs, self.version, 'val')
         self.test_folder = osp.join(self.logs, self.version, 'test')
 
-    def forward(self, batch) -> torch.Tensor:
+    def forward(self, batch: Data) -> torch.Tensor:
         """Forward pass of the model."""
-        x, edge_index, edge_attr = batch.x, batch.edge_index, batch.edge_attr
+        x, edge_index, edge_attr = batch.x, batch.edge_index.long(), batch.edge_attr
 
-        # node and edge embedding
-        x = self.node_encoder(x)
-        edge_attr = self.edge_encoder(edge_attr)
+        # step 1: encode node/edge features into latent node/edge embeddings
+        x = self.node_encoder(x) # output shape is the specified hidden dimension
 
-        # message passing
-        for layer in self.processor:
-            x = layer(x, edge_index, edge_attr)
+        edge_attr = self.edge_encoder(edge_attr) # output shape is the specified hidden dimension
 
-        # node embedding decoding
-        x = self.decoder(x)
+        # step 2: perform message passing with latent node/edge embeddings
+        for i in range(self.num_layers):
+            x, edge_attr = self.processor[i](x, edge_index, edge_attr)
 
-        return x
+        # step 3: decode latent node embeddings into physical quantities of interest
+        return self.decoder(x)
+    
+    def loss(self, pred: torch.Tensor, inputs: Data, split: str) -> torch.Tensor:
+        """Calculate the loss for the given prediction and inputs."""
+        # get the loss mask for the nodes of the types we calculate loss for
+        loss_mask = (torch.argmax(inputs.x[:,2:],dim=1)==torch.tensor(NodeType.NORMAL)) + (torch.argmax(inputs.x[:,2:],dim=1)==torch.tensor(NodeType.OUTFLOW)) + (torch.argmax(inputs.x[:,2:],dim=1)==torch.tensor(NodeType.OBSTACLE))    
+
+        # find sum of square errors
+        error = torch.sum((inputs.y-pred)**2, dim=1)
+
+        # root and mean the errors for the nodes we calculate loss for
+        loss= torch.sqrt(torch.mean(error[loss_mask]))
+        
+        return loss
     
     def on_test_start(self):
         """Set up folders for validation and test sets"""
