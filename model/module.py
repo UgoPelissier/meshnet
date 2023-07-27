@@ -96,7 +96,7 @@ class MeshNet(pl.LightningModule):
         # step 3: decode latent node embeddings into physical quantities of interest
         return self.decoder(x)
     
-    def loss(self, pred: torch.Tensor, inputs: Data, split: str) -> torch.Tensor:
+    def loss(self, pred: torch.Tensor, inputs: Data) -> torch.Tensor:
         """Calculate the loss for the given prediction and inputs."""
         # get the loss mask for the nodes of the types we calculate loss for
         loss_mask = (torch.argmax(inputs.x[:,2:],dim=1)==torch.tensor(NodeType.NORMAL)) + (torch.argmax(inputs.x[:,2:],dim=1)==torch.tensor(NodeType.OUTFLOW)) + (torch.argmax(inputs.x[:,2:],dim=1)==torch.tensor(NodeType.OBSTACLE))    
@@ -118,8 +118,8 @@ class MeshNet(pl.LightningModule):
 
     def training_step(self, batch, batch_idx: int) -> torch.Tensor:
         """Training step of the model."""
-        preds = self(batch)
-        loss = F.mse_loss(preds, batch.y.unsqueeze(dim=-1))
+        pred = self(batch)
+        loss = loss = self.loss(pred, batch)
 
         self.log("train/loss", loss, on_step=False, on_epoch=True, prog_bar=True, logger=True, batch_size=batch.x.shape[0])
         self.log("train/lr", self.trainer.optimizers[0].param_groups[0]['lr'], on_step=False, on_epoch=True, prog_bar=False, logger=True, batch_size=batch.x.shape[0])
@@ -128,8 +128,8 @@ class MeshNet(pl.LightningModule):
     
     def validation_step(self, batch, batch_idx: int) -> torch.Tensor:
         """Validation step of the model."""
-        preds = self(batch)
-        loss = F.mse_loss(preds, batch.y.unsqueeze(dim=-1))
+        pred = self(batch)
+        loss = loss = self.loss(pred, batch)
 
         self.log("val/loss", loss, on_step=False, on_epoch=True, prog_bar=False, logger=True, batch_size=batch.x.shape[0])
 
