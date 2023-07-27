@@ -50,6 +50,18 @@ class FreeFem(Dataset):
     def download(self):
         pass
 
+    def node_type(self, label: str) -> int:
+        if label == 'INFLOW':
+            return NodeType.INFLOW
+        elif label == 'OUTFLOW':
+            return NodeType.OUTFLOW
+        elif label == 'WALL_BOUNDARY':
+            return NodeType.WALL_BOUNDARY
+        elif label == 'OBSTACLE':
+            return NodeType.OBSTACLE
+        else:
+            return NodeType.NORMAL
+
     def process_file(
             self,
             name: str
@@ -63,12 +75,13 @@ class FreeFem(Dataset):
             # extract points, lines and circles
             points = [line for line in lines if line.startswith('Point')]
             lines__ = [line for line in lines if line.startswith('Line')]
-            circles = [line for line in lines if line.startswith('Circle')]
+            physical_curves = [line for line in lines if line.startswith('Physical Curve')]
+            circles = [line for line in lines if line.startswith('Ellipse')]
 
             # extract coordinates and mesh size
             points = torch.Tensor([[float(p) for p in line.split('{')[1].split('}')[0].split(',')] for line in points])
             y = points[:, -1]
-            pos = points[:, :-1]
+            points = points[:, :-1]
 
             # extract edges
             lines__ = torch.Tensor([[int(p) for p in line.split('{')[1].split('}')[0].split(',')] for line in lines__]).long()
@@ -78,12 +91,32 @@ class FreeFem(Dataset):
             senders = torch.max(edges, dim=1).values
             packed_edges = torch.stack([senders, receivers], dim=1)
             # remove duplicates and unpack
-            unique_edges = torch.unique(packed_edges, dim=0)
+            unique_edges, permutation = torch.unique(packed_edges, return_inverse=True, dim=0)
             senders, receivers = unique_edges[:, 0], unique_edges[:, 1]
             # create two-way connectivity
             edge_index = torch.stack([torch.cat((senders, receivers), dim=0), torch.cat((receivers, senders), dim=0)], dim=0)
 
-            torch.save(Data(x=x, edge_index=edge_index, pos=pos, y=y, name=torch.tensor(int(name[-3:]), dtype=torch.long)), osp.join(self.processed_dir, self.split, f'{name}.pt'))
+            # extract node types
+            node_types = torch.zeros(edges.shape[0], dtype=torch.long)
+            for curve in physical_curves:
+                label = curve.split('(')[1].split('"')[1]
+                lines = curve.split('{')[1].split('}')[0].split(',')
+                for line in lines:
+                    node_types[int(line)-1] = self.node_type(label)
+            tmp = torch.zeros(edges.shape[0], dtype=torch.long)
+            for i in range(len(permutation)):
+                tmp[permutation[i]] = node_types[i]
+            node_types = torch.cat((tmp, tmp), dim=0)
+            node_types_one_hot = torch.nn.functional.one_hot(node_types.long(), num_classes=NodeType.SIZE)
+
+            # get edge attributes
+            u_i = points[edge_index[0]-1][:,:2]
+            u_j = points[edge_index[1]-1][:,:2]
+            u_ij = torch.Tensor(u_i - u_j)
+            u_ij_norm = torch.norm(u_ij, p=2, dim=1, keepdim=True)
+            edge_attr = torch.cat((u_ij, u_ij_norm, node_types_one_hot),dim=-1).type(torch.float)
+
+            torch.save(Data(edge_index=edge_index, edge_attr=edge_attr, y=y, name=torch.tensor(int(name[-3:]), dtype=torch.long)), osp.join(self.processed_dir, self.split, f'{name}.pt'))
 
     def process(self) -> None:
         """Process the dataset."""
