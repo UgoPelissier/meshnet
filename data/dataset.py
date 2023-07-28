@@ -86,7 +86,15 @@ class FreeFem(Dataset):
             # extract edges
             lines__ = torch.Tensor([[int(p) for p in line.split('{')[1].split('}')[0].split(',')] for line in lines__]).long()
             circles = torch.Tensor([[int(p) for p in line.split('{')[1].split('}')[0].split(',')] for line in circles]).long()[:,[0,2]]
-            edges = torch.cat([lines__, circles], dim=0)
+            edges = torch.cat([lines__, circles], dim=0) -1
+
+            count = 0
+            for i in range(points.shape[0]):
+                if not (i-count) in edges:
+                    points = torch.cat([points[:i-count], points[i-count+1:]], dim=0)
+                    edges = edges - 1*(edges>(i-count))
+                    count += 1
+
             receivers = torch.min(edges, dim=1).values
             senders = torch.max(edges, dim=1).values
             packed_edges = torch.stack([senders, receivers], dim=1)
@@ -94,7 +102,7 @@ class FreeFem(Dataset):
             unique_edges, permutation = torch.unique(packed_edges, return_inverse=True, dim=0)
             senders, receivers = unique_edges[:, 0], unique_edges[:, 1]
             # create two-way connectivity
-            edge_index = torch.stack([torch.cat((senders, receivers), dim=0), torch.cat((receivers, senders), dim=0)], dim=0) -1
+            edge_index = torch.stack([torch.cat((senders, receivers), dim=0), torch.cat((receivers, senders), dim=0)], dim=0)
 
             # extract node types
             edge_types = torch.zeros(edges.shape[0], dtype=torch.long)
