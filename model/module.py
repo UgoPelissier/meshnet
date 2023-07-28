@@ -124,19 +124,15 @@ class MeshNet(pl.LightningModule):
         """Training step of the model."""
         pred = self(batch)
         loss = loss = self.loss(pred, batch)
-
-        self.log("train/loss", loss, on_step=False, on_epoch=True, prog_bar=True, logger=True, batch_size=batch.x.shape[0])
-        self.log("train/lr", self.trainer.optimizers[0].param_groups[0]['lr'], on_step=False, on_epoch=True, prog_bar=False, logger=True, batch_size=batch.x.shape[0])
-
+        self.log("train/loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True) #, batch_size=batch.x.shape[0])
+        self.log("train/lr", self.trainer.optimizers[0].param_groups[0]['lr'], on_step=False, on_epoch=True, prog_bar=False, logger=True) #, batch_size=batch.x.shape[0])
         return loss
     
     def validation_step(self, batch, batch_idx: int) -> torch.Tensor:
         """Validation step of the model."""
         pred = self(batch)
         loss = self.loss(pred, batch)
-
-        self.log("val/loss", loss, on_step=False, on_epoch=True, prog_bar=False, logger=True, batch_size=batch.x.shape[0])
-
+        self.log("val/loss", loss, on_step=True, on_epoch=True, prog_bar=False, logger=True, batch_size=batch.x.shape[0])
         return loss
     
     def test_step(self, batch, batch_idx: int) -> torch.Tensor:
