@@ -37,6 +37,26 @@ class FreeFem(Dataset):
         self.root = root
         self.split = split
         self.idx = idx
+
+        self.eps = torch.tensor(1e-8)
+
+        # mean and std of the node features are calculated
+        self.mean_vec_x = torch.zeros(5)
+        self.std_vec_x = torch.zeros(5)
+
+        # mean and std of the edge features are calculated
+        self.mean_vec_edge = torch.zeros(8)
+        self.std_vec_edge = torch.zeros(8)
+
+        # mean and std of the output parameters are calculated
+        self.mean_vec_y = torch.zeros(1)
+        self.std_vec_y = torch.zeros(1)
+
+        # define counters used in normalization
+        self.num_accs_x  =  0
+        self.num_accs_edge = 0
+        self.num_accs_y = 0
+
         super().__init__(root, transform, pre_transform)
 
     @property
@@ -61,6 +81,43 @@ class FreeFem(Dataset):
             return NodeType.OBSTACLE
         else:
             return NodeType.NORMAL
+        
+    def update_stats(self, x: torch.Tensor, edge_attr: torch.Tensor, y: torch.Tensor) -> None:
+        """Update the mean and std of the node features, edge features, and output parameters."""
+        self.mean_vec_x += torch.sum(x, dim = 0)
+        self.std_vec_x += torch.sum(x**2, dim = 0)
+        self.num_accs_x += x.shape[0]
+
+        self.mean_vec_edge += torch.sum(edge_attr, dim=0)
+        self.std_vec_edge += torch.sum(edge_attr**2, dim=0)
+        self.num_accs_edge += edge_attr.shape[0]
+
+        self.mean_vec_y += torch.sum(y, dim=0)
+        self.std_vec_y += torch.sum(y**2, dim=0)
+        self.num_accs_y += y.shape[0]
+
+    def save_stats(self) -> None:
+        """Save the mean and std of the node features, edge features, and output parameters."""
+        self.mean_vec_x = self.mean_vec_x / self.num_accs_x
+        self.std_vec_x = torch.maximum(torch.sqrt(self.std_vec_x / self.num_accs_x - self.mean_vec_x**2), self.eps)
+
+        self.mean_vec_edge = self.mean_vec_edge / self.num_accs_edge
+        self.std_vec_edge = torch.maximum(torch.sqrt(self.std_vec_edge / self.num_accs_edge - self.mean_vec_edge**2), self.eps)
+
+        self.mean_vec_y = self.mean_vec_y / self.num_accs_y
+        self.std_vec_y = torch.maximum(torch.sqrt(self.std_vec_y / self.num_accs_y - self.mean_vec_y**2), self.eps)
+
+        save_dir = osp.join(self.processed_dir, 'stats', self.split)
+        os.makedirs(save_dir, exist_ok=True)
+
+        torch.save(self.mean_vec_x, osp.join(save_dir, 'mean_vec_x.pt'))
+        torch.save(self.std_vec_x, osp.join(save_dir, 'std_vec_x.pt'))
+
+        torch.save(self.mean_vec_edge, osp.join(save_dir, 'mean_vec_edge.pt'))
+        torch.save(self.std_vec_edge, osp.join(save_dir, 'std_vec_edge.pt'))
+
+        torch.save(self.mean_vec_y, osp.join(save_dir, 'mean_vec_y.pt'))
+        torch.save(self.std_vec_y, osp.join(save_dir, 'std_vec_y.pt'))
 
     def process_file(
             self,
@@ -92,6 +149,7 @@ class FreeFem(Dataset):
             for i in range(points.shape[0]):
                 if not (i-count) in edges:
                     points = torch.cat([points[:i-count], points[i-count+1:]], dim=0)
+                    y = torch.cat([y[:i-count], y[i-count+1:]], dim=0)
                     edges = edges - 1*(edges>(i-count))
                     count += 1
 
@@ -130,6 +188,8 @@ class FreeFem(Dataset):
                 for j in range(edge_index.shape[1]):
                     x[edge_index[i,j], edge_types[j]] = 1.0
 
+            self.update_stats(x, edge_attr, y)
+
             torch.save(Data(x=x, edge_index=edge_index, edge_attr=edge_attr, y=y, name=torch.tensor(int(name[-3:]), dtype=torch.long)), osp.join(self.processed_dir, self.split, f'{name}.pt'))
 
     def process(self) -> None:
@@ -140,6 +200,7 @@ class FreeFem(Dataset):
             for name in self.raw_file_names:
                 self.process_file(name)
                 bar()
+        self.save_stats()
 
     def len(self) -> int:
         return len(self.processed_file_names)
