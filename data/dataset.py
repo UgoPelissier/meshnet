@@ -94,7 +94,7 @@ class FreeFem(Dataset):
             unique_edges, permutation = torch.unique(packed_edges, return_inverse=True, dim=0)
             senders, receivers = unique_edges[:, 0], unique_edges[:, 1]
             # create two-way connectivity
-            edge_index = torch.stack([torch.cat((senders, receivers), dim=0), torch.cat((receivers, senders), dim=0)], dim=0)
+            edge_index = torch.stack([torch.cat((senders, receivers), dim=0), torch.cat((receivers, senders), dim=0)], dim=0) -1
 
             # extract node types
             edge_types = torch.zeros(edges.shape[0], dtype=torch.long)
@@ -110,8 +110,8 @@ class FreeFem(Dataset):
             edge_types_one_hot = torch.nn.functional.one_hot(edge_types.long(), num_classes=NodeType.SIZE)
 
             # get edge attributes
-            u_i = points[edge_index[0]-1][:,:2]
-            u_j = points[edge_index[1]-1][:,:2]
+            u_i = points[edge_index[0]][:,:2]
+            u_j = points[edge_index[1]][:,:2]
             u_ij = torch.Tensor(u_i - u_j)
             u_ij_norm = torch.norm(u_ij, p=2, dim=1, keepdim=True)
             edge_attr = torch.cat((u_ij, u_ij_norm, edge_types_one_hot),dim=-1).type(torch.float)
@@ -120,7 +120,7 @@ class FreeFem(Dataset):
             x = torch.zeros(points.shape[0], NodeType.SIZE)
             for i in range(edge_index.shape[0]):
                 for j in range(edge_index.shape[1]):
-                    x[edge_index[i,j]-1, edge_types[j]] = 1.0
+                    x[edge_index[i,j], edge_types[j]] = 1.0
 
             torch.save(Data(x=x, edge_index=edge_index, edge_attr=edge_attr, y=y, name=torch.tensor(int(name[-3:]), dtype=torch.long)), osp.join(self.processed_dir, self.split, f'{name}.pt'))
 
