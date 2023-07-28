@@ -2,14 +2,13 @@ from typing import Optional
 import os
 import os.path as osp
 
-from graphnet.utils.stats import load_stats, normalize, unnormalize
+from meshnet.utils.stats import load_stats, normalize, unnormalize
 from meshnet.utils.utils import get_next_version
 from meshnet.data.dataset import NodeType
-from graphnet.model.processor import ProcessorLayer
+from meshnet.model.processor import ProcessorLayer
 from meshnet.model.mesh import post_process
 
 import torch
-import torch.nn.functional as F
 from torch.nn import Sequential, Linear, ReLU, LayerNorm
 from torch_geometric.data import Data
 import lightning.pytorch as pl
