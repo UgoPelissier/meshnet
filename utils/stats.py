@@ -19,7 +19,7 @@ def load_stats(
     std_vec_y_train = torch.load(osp.join(train_dir, 'std_vec_y.pt'), map_location=device)
     train_stats = (mean_vec_x_train, std_vec_x_train, mean_vec_edge_train, std_vec_edge_train, mean_vec_y_train, std_vec_y_train)
 
-    val_dir = osp.join(data_dir, 'processed', 'stats', 'valid')
+    val_dir = osp.join(data_dir, 'processed', 'stats', 'validation')
     mean_vec_x_val = torch.load(osp.join(val_dir, 'mean_vec_x.pt'), map_location=device)
     std_vec_x_val = torch.load(osp.join(val_dir, 'std_vec_x.pt'), map_location=device)
     mean_vec_edge_val = torch.load(osp.join(val_dir, 'mean_vec_edge.pt'), map_location=device)
