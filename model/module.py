@@ -2,6 +2,7 @@ from typing import Optional
 import os
 import os.path as osp
 
+from graphnet.utils.stats import load_stats, normalize, unnormalize
 from meshnet.utils.utils import get_next_version
 from meshnet.data.dataset import NodeType
 from graphnet.model.processor import ProcessorLayer
@@ -33,7 +34,7 @@ class MeshNet(pl.LightningModule):
         super().__init__()
 
         self.wdir = wdir
-        self.dataset = data_dir
+        self.data_dir = data_dir
         self.logs = logs
         self.num_layers = num_layers
 
@@ -84,9 +85,31 @@ class MeshNet(pl.LightningModule):
     def build_processor_model(self):
         return ProcessorLayer
 
-    def forward(self, batch: Data) -> torch.Tensor:
-        """Forward pass of the model."""
+    def forward(
+            self,
+            batch: Data,
+            split: str,
+            mean_vec_x_predict: Optional[torch.Tensor] = None,
+            mean_vec_edge_predict: Optional[torch.Tensor] = None,
+            std_vec_x_predict: Optional[torch.Tensor] = None,
+            std_vec_edge_predict: Optional[torch.Tensor] = None
+    ) -> torch.Tensor:
+        """
+        Encoder encodes graph (node/edge features) into latent vectors (node/edge embeddings)
+        The return of processor is fed into the processor for generating new feature vectors
+        """
         x, edge_index, edge_attr = batch.x, batch.edge_index.long(), batch.edge_attr
+
+        if split == 'train':
+            x, edge_attr = normalize(data=[x, edge_attr], mean=[self.mean_vec_x_train, self.mean_vec_edge_train], std=[self.std_vec_x_train, self.std_vec_edge_train])
+        elif split == 'val':
+            x, edge_attr = normalize(data=[x, edge_attr], mean=[self.mean_vec_x_val, self.mean_vec_edge_val], std=[self.std_vec_x_val, self.std_vec_edge_val])
+        elif split == 'test':
+            x, edge_attr = normalize(data=[x, edge_attr], mean=[self.mean_vec_x_test, self.mean_vec_edge_test], std=[self.std_vec_x_test, self.std_vec_edge_test])
+        elif split == 'predict':
+            x, edge_attr = normalize(data=[x, edge_attr], mean=[mean_vec_x_predict, mean_vec_edge_predict], std=[std_vec_x_predict, std_vec_edge_predict]) # type: ignore
+        else:
+            raise ValueError(f'Invalid split: {split}')
 
         # step 1: encode node/edge features into latent node/edge embeddings
         x = self.node_encoder(x) # output shape is the specified hidden dimension
@@ -100,16 +123,25 @@ class MeshNet(pl.LightningModule):
         # step 3: decode latent node embeddings into physical quantities of interest
         return self.decoder(x)
     
-    def loss(self, pred: torch.Tensor, inputs: Data) -> torch.Tensor:
+    def loss(self, pred: torch.Tensor, inputs: Data, split: str) -> torch.Tensor:
         """Calculate the loss for the given prediction and inputs."""
-        # get the loss mask for the nodes of the types we calculate loss for
-        loss_mask = (torch.argmax(inputs.x[:,2:],dim=1)==torch.tensor(NodeType.NORMAL)) + (torch.argmax(inputs.x[:,2:],dim=1)==torch.tensor(NodeType.OUTFLOW)) + (torch.argmax(inputs.x[:,2:],dim=1)==torch.tensor(NodeType.OBSTACLE))    
+        # loss_mask = torch.argmax(inputs.x,dim=1)==torch.tensor(NodeType.OBSTACLE)
+
+        # normalize labels with dataset statistics
+        if split == 'train':
+            labels = normalize(data=inputs.y, mean=self.mean_vec_y_train, std=self.std_vec_y_train)
+        elif split == 'val':
+            labels = normalize(data=inputs.y, mean=self.mean_vec_y_val, std=self.std_vec_y_val)
+        elif split == 'test':
+            labels = normalize(data=inputs.y, mean=self.mean_vec_y_test, std=self.std_vec_y_test)
+        else:
+            raise ValueError(f'Invalid split: {split}')
 
         # find sum of square errors
-        error = torch.sum((inputs.y-pred)**2, dim=1)
+        error = torch.sum((labels-pred.squeeze())**2)
 
         # root and mean the errors for the nodes we calculate loss for
-        loss= torch.sqrt(torch.mean(error[loss_mask]))
+        loss= torch.sqrt(torch.mean(error))
         
         return loss
     
@@ -122,20 +154,18 @@ class MeshNet(pl.LightningModule):
 
     def training_step(self, batch, batch_idx: int) -> torch.Tensor:
         """Training step of the model."""
-        pred = self(batch)
-        loss = self.loss(pred, batch)
-
-        if (batch_idx==0):
-            print(pred)
-
+        pred = self(batch, split='train')
+        loss = self.loss(pred, batch, split='train')
         self.log("train/loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True) #, batch_size=batch.x.shape[0])
         self.log("train/lr", self.trainer.optimizers[0].param_groups[0]['lr'], on_step=False, on_epoch=True, prog_bar=False, logger=True) #, batch_size=batch.x.shape[0])
         return loss
     
     def validation_step(self, batch, batch_idx: int) -> torch.Tensor:
         """Validation step of the model."""
-        pred = self(batch)
-        loss = self.loss(pred, batch)
+        if self.trainer.sanity_checking:
+            self.load_stats()
+        pred = self(batch, split='val')
+        loss = self.loss(pred, batch, split='val')
         self.log("val/loss", loss, on_step=True, on_epoch=True, prog_bar=False, logger=True, batch_size=batch.x.shape[0])
         return loss
     
@@ -163,3 +193,11 @@ class MeshNet(pl.LightningModule):
         else:
             lr_scheduler = self.lr_scheduler(optimizer)
             return [optimizer], [lr_scheduler]
+        
+    def load_stats(self):
+        """Load statistics from the dataset."""
+        train_stats, val_stats, test_stats = load_stats(self.data_dir, self.device)
+        self.mean_vec_x_train, self.std_vec_x_train, self.mean_vec_edge_train, self.std_vec_edge_train, self.mean_vec_y_train, self.std_vec_y_train = train_stats
+        self.mean_vec_x_val, self.std_vec_x_val, self.mean_vec_edge_val, self.std_vec_edge_val, self.mean_vec_y_val, self.std_vec_y_val = val_stats
+        self.mean_vec_x_test, self.std_vec_x_test, self.mean_vec_edge_test, self.std_vec_edge_test, self.mean_vec_y_test, self.std_vec_y_test = test_stats
+    
