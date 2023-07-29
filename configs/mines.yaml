@@ -3,7 +3,7 @@ seed_everything: 42
 trainer:
   accelerator: gpu
   strategy: auto
-  devices: 2
+  devices: 1
   num_nodes: 1
   precision: 32-true
   logger:
@@ -94,6 +94,6 @@ data:
   data_dir: /home/eleve05/adaptnet/meshnet/data/stokes/
   val_size: 0.15
   test_size: 0.1
-  batch_size: 8
+  batch_size: 1
   num_workers: 4
 ckpt_path: null
