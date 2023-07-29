@@ -134,7 +134,7 @@ class MeshNet(pl.LightningModule):
         elif split == 'val':
             labels = normalize(data=inputs.y, mean=self.mean_vec_y_val, std=self.std_vec_y_val)
         elif split == 'test':
-            labels = normalize(data=inputs.y, mean=self.mean_vec_y_test, std=self.std_vec_y_test)
+            labels = inputs.y
         else:
             raise ValueError(f'Invalid split: {split}')
 
@@ -180,7 +180,7 @@ class MeshNet(pl.LightningModule):
             mean=self.mean_vec_y_train,
             std=self.std_vec_y_train
         )
-        loss = self.loss(pred, batch, split='train')
+        loss = self.loss(pred, batch, split='test')
         self.log("test/loss", loss, on_step=False, on_epoch=True, prog_bar=False, logger=True, batch_size=batch.x.shape[0])
         return loss
     
