@@ -170,17 +170,9 @@ class MeshNet(pl.LightningModule):
     
     def test_step(self, batch, batch_idx: int) -> torch.Tensor:
         """Validation step of the model."""
-        preds = self(batch)
-        loss = self.loss(preds, batch)
-
+        pred = self(batch)
+        loss = self.loss(pred, batch)
         self.log("test/loss", loss, on_step=False, on_epoch=True, prog_bar=False, logger=True, batch_size=batch.x.shape[0])
-
-        sizes = (batch.ptr[1:] - batch.ptr[:-1]).tolist()
-        for pred, x, pos, name in zip(preds.split(sizes), batch.x.split(sizes), batch.pos.split(sizes), batch.name.split([1]*batch.name.shape[0])):
-            for sample in self.test_idx:
-                if (name==sample):
-                    post_process(pred, x, pos, "stokes_{:03d}".format(name.item()), self.wdir, self.test_folder)
-
         return loss
     
     def configure_optimizers(self):
