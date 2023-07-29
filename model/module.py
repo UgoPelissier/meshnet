@@ -170,12 +170,13 @@ class MeshNet(pl.LightningModule):
     
     def test_step(self, batch, batch_idx: int) -> torch.Tensor:
         """Validation step of the model."""
+        self.load_stats()
         pred = unnormalize(
             data=self(batch, split='train'),
             mean=self.mean_vec_y_train,
             std=self.std_vec_y_train
         )
-        loss = self.loss(pred, batch)
+        loss = self.loss(pred, batch, split='train')
         self.log("test/loss", loss, on_step=False, on_epoch=True, prog_bar=False, logger=True, batch_size=batch.x.shape[0])
         return loss
     
