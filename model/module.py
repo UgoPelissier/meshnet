@@ -81,6 +81,8 @@ class MeshNet(pl.LightningModule):
         self.val_folder = osp.join(self.logs, self.version, 'val')
         self.test_folder = osp.join(self.logs, self.version, 'test')
 
+        self.stats_loaded = False
+
     def build_processor_model(self):
         return ProcessorLayer
 
@@ -170,7 +172,9 @@ class MeshNet(pl.LightningModule):
     
     def test_step(self, batch, batch_idx: int) -> torch.Tensor:
         """Validation step of the model."""
-        self.load_stats()
+        if not self.stats_loaded:
+            self.load_stats()
+            self.stats_loaded = True
         pred = unnormalize(
             data=self(batch, split='train'),
             mean=self.mean_vec_y_train,
