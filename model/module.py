@@ -183,8 +183,29 @@ class MeshNet(pl.LightningModule):
         )
         loss = self.loss(pred, batch, split='test')
         self.log("test/loss", loss, on_step=False, on_epoch=True, prog_bar=False, logger=True, batch_size=batch.x.shape[0])
+
         with open (osp.join(self.data_dir, 'raw' , 'geo', 'cad_{:03d}.geo'.format(batch.name[0])), 'r+') as f:
-            geo = f.readlines()
+            # read the file
+            lines = f.readlines()
+            lines = [line.strip() for line in lines]
+            lines = [line for line in lines if not (line.startswith('//') or line.startswith('SetFactory'))]
+
+            # extract points, lines and circles
+            points = [line for line in lines if line.startswith('Point')]
+            lines__ = [line for line in lines if line.startswith('Line')]
+            physical_curves = [line for line in lines if line.startswith('Physical Curve')]
+            circles = [line for line in lines if line.startswith('Ellipse')]
+
+            # extract coordinates and mesh size
+            points = torch.Tensor([[float(p) for p in line.split('{')[1].split('}')[0].split(',')] for line in points])
+            y = points[:, -1]
+            points = points[:, :-1]
+
+            # extract edges
+            lines__ = torch.Tensor([[int(p) for p in line.split('{')[1].split('}')[0].split(',')] for line in lines__]).long()
+            circles = torch.Tensor([[int(p) for p in line.split('{')[1].split('}')[0].split(',')] for line in circles]).long()[:,[0,2]]
+            edges = torch.cat([lines__, circles], dim=0) -1
+            
         return loss
     
     def configure_optimizers(self):
