@@ -204,8 +204,8 @@ class MeshNet(pl.LightningModule):
             # extract edges
             lines__ = torch.Tensor([[int(p) for p in line.split('{')[1].split('}')[0].split(',')] for line in lines__]).long()
             circles = torch.Tensor([[int(p) for p in line.split('{')[1].split('}')[0].split(',')] for line in circles]).long()[:,[0,2]]
-            edges = torch.cat([lines__, circles], dim=0) -1
-            
+            edges = torch.cat([lines__, circles], dim=0)
+
         return loss
     
     def configure_optimizers(self):
