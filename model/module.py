@@ -1,7 +1,8 @@
 from typing import Optional
 import os
 import os.path as osp
-import pickle
+import pygmsh
+import gmsh
 
 from meshnet.utils.stats import load_stats, normalize, unnormalize
 from meshnet.utils.utils import get_next_version
@@ -150,9 +151,8 @@ class MeshNet(pl.LightningModule):
     def on_test_start(self):
         """Set up folders for validation and test sets"""
         os.makedirs(self.test_folder, exist_ok=True)
-        os.makedirs(osp.join(self.test_folder, "mesh"), exist_ok=True)
-        os.makedirs(osp.join(self.test_folder, "vtu"), exist_ok=True)
-        os.makedirs(osp.join(self.test_folder, "tmp"), exist_ok=True)
+        os.makedirs(osp.join(self.test_folder, "msh"), exist_ok=True)
+        os.makedirs(osp.join(self.test_folder, "vtk"), exist_ok=True)
 
     def training_step(self, batch, batch_idx: int) -> torch.Tensor:
         """Training step of the model."""
@@ -193,6 +193,7 @@ class MeshNet(pl.LightningModule):
             # extract points, lines and circles
             points = [line for line in lines if line.startswith('Point')]
             lines__ = [line for line in lines if line.startswith('Line')]
+            curve_loops = [line for line in lines if line.startswith('Curve Loop')]
             physical_curves = [line for line in lines if line.startswith('Physical Curve')]
             circles = [line for line in lines if line.startswith('Ellipse')]
 
@@ -204,14 +205,58 @@ class MeshNet(pl.LightningModule):
             # extract edges
             lines__ = torch.Tensor([[int(p) for p in line.split('{')[1].split('}')[0].split(',')] for line in lines__]).long()
             circles = torch.Tensor([[int(p) for p in line.split('{')[1].split('}')[0].split(',')] for line in circles]).long()[:,[0,2]]
-            edges = torch.cat([lines__, circles], dim=0)
+            edges = torch.cat([lines__, circles], dim=0) - 1
 
-            # extract physical curves
-            physical_curves_dict = {}
-            for curve in physical_curves:
-                label = curve.split('(')[1].split('"')[1]
-                lines = curve.split('{')[1].split('}')[0].split(',')
-                physical_curves_dict[label] = [int(line) for line in lines]
+            # remove center points
+            count = 0
+            for i in range(points.shape[0]):
+                if not (i-count) in edges:
+                    points = torch.cat([points[:i-count], points[i-count+1:]], dim=0)
+                    y = torch.cat([y[:i-count], y[i-count+1:]], dim=0)
+                    edges = edges - 1*(edges>(i-count))
+                    count += 1
+
+            # extract curve loops
+            curve_loops_dict = {}
+            for curve_loop in curve_loops:
+                id = int(curve_loop.split('(')[1].split(')')[0])
+                curve = [int(p) for p in curve_loop.split('{')[1].split('}')[0].split(',')]
+                curve_loops_dict[id] = curve
+
+            # Initialize empty geometry using the build in kernel in GMSH
+            geometry = pygmsh.geo.Geometry()
+            # Fetch model we would like to add data to
+            model = geometry.__enter__()
+
+            # Add points
+            points_gmsh = []
+            for i, point in enumerate(points):
+                points_gmsh.append(model.add_point(x=point, mesh_size=pred[i]))
+
+            # Add edges
+            channnel_lines = []
+            for edge in edges:
+                channnel_lines.append(model.add_line(p0=points_gmsh[edge[0]], p1=points_gmsh[edge[1]]))
+
+            # Add curve loops
+            channel_loop = []
+            for id, curve_loop in curve_loops_dict.items():
+                channel_loop.append(model.add_curve_loop(curves=[channnel_lines[i-1] for i in curve_loop]))
+
+            # Create a plane surface for meshing
+            plane_surface = model.add_plane_surface(curve_loop=channel_loop[0], holes=channel_loop[1:])
+
+            # Call gmsh kernel before add physical entities
+            model.synchronize()
+
+            geometry.generate_mesh(dim=2)
+            
+            gmsh.write(osp.join(self.test_folder, "msh", 'mesh_{:03d}.msh'.format(batch.name[0])))
+            gmsh.write(osp.join(self.test_folder, "vtk", 'mesh_{:03d}.vtk'.format(batch.name[0])))
+            
+            gmsh.clear()
+            geometry.__exit__()
+
 
         return loss
     
