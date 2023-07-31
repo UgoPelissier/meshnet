@@ -1,6 +1,7 @@
 from typing import Optional
 import os
 import os.path as osp
+import pickle
 
 from meshnet.utils.stats import load_stats, normalize, unnormalize
 from meshnet.utils.utils import get_next_version
@@ -182,6 +183,8 @@ class MeshNet(pl.LightningModule):
         )
         loss = self.loss(pred, batch, split='test')
         self.log("test/loss", loss, on_step=False, on_epoch=True, prog_bar=False, logger=True, batch_size=batch.x.shape[0])
+        with open (osp.join(self.data_dir, 'raw' , 'geo', 'cad_{:03d}.geo'.format(batch.name[0])), 'r+') as f:
+            geo = f.readlines()
         return loss
     
     def configure_optimizers(self):
