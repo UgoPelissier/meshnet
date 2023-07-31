@@ -206,6 +206,13 @@ class MeshNet(pl.LightningModule):
             circles = torch.Tensor([[int(p) for p in line.split('{')[1].split('}')[0].split(',')] for line in circles]).long()[:,[0,2]]
             edges = torch.cat([lines__, circles], dim=0)
 
+            # extract physical curves
+            physical_curves_dict = {}
+            for curve in physical_curves:
+                label = curve.split('(')[1].split('"')[1]
+                lines = curve.split('{')[1].split('}')[0].split(',')
+                physical_curves_dict[label] = [int(line) for line in lines]
+
         return loss
     
     def configure_optimizers(self):
