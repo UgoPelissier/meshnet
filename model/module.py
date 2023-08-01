@@ -208,13 +208,10 @@ class MeshNet(pl.LightningModule):
             edges = torch.cat([lines__, circles], dim=0) - 1
 
             # remove center points
-            count = 0
+            center_points = []
             for i in range(points.shape[0]):
-                if not (i-count) in edges:
-                    points = torch.cat([points[:i-count], points[i-count+1:]], dim=0)
-                    y = torch.cat([y[:i-count], y[i-count+1:]], dim=0)
-                    edges = edges - 1*(edges>(i-count))
-                    count += 1
+                if not i in edges:
+                    center_points.append(i)
 
             # extract curve loops
             curve_loops_dict = {}
@@ -230,13 +227,40 @@ class MeshNet(pl.LightningModule):
 
             # Add points
             points_gmsh = []
+            count = 0
             for i, point in enumerate(points):
-                points_gmsh.append(model.add_point(x=point, mesh_size=pred[i]))
+                if i not in center_points:
+                    points_gmsh.append(model.add_point(x=point, mesh_size=pred[i-count]))
+                else:
+                    points_gmsh.append(model.add_point(x=point, mesh_size=1.0))
+                    count += 1
 
             # Add edges
             channnel_lines = []
-            for edge in edges:
+            for edge in edges[:4,:]:
                 channnel_lines.append(model.add_line(p0=points_gmsh[edge[0]], p1=points_gmsh[edge[1]]))
+
+            start = 4
+            while (start+4 <= points.shape[0]):
+                channnel_lines.append(model.add_ellipse_arc(
+                    start=points_gmsh[start],
+                    center=points_gmsh[start+1],
+                    point_on_major_axis=points_gmsh[start+2],
+                    end=points_gmsh[start+2]
+                ))
+                channnel_lines.append(model.add_ellipse_arc(
+                    start=points_gmsh[start+2],
+                    center=points_gmsh[start+1],
+                    point_on_major_axis=points_gmsh[start+3],
+                    end=points_gmsh[start+3]
+                ))
+                channnel_lines.append(model.add_ellipse_arc(
+                    start=points_gmsh[start+3],
+                    center=points_gmsh[start+1],
+                    point_on_major_axis=points_gmsh[start],
+                    end=points_gmsh[start]
+                ))
+                start += 4
 
             # Add curve loops
             channel_loop = []
