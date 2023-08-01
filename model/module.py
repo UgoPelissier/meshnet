@@ -268,7 +268,7 @@ class MeshNet(pl.LightningModule):
                 channel_loop.append(model.add_curve_loop(curves=[channnel_lines[i-1] for i in curve_loop]))
 
             # Create a plane surface for meshing
-            plane_surface = model.add_plane_surface(curve_loop=channel_loop[0], holes=channel_loop[1:])
+            model.add_plane_surface(curve_loop=channel_loop[0], holes=channel_loop[1:])
 
             # Call gmsh kernel before add physical entities
             model.synchronize()
