@@ -281,7 +281,6 @@ class MeshNet(pl.LightningModule):
             gmsh.clear()
             geometry.__exit__()
 
-
         return loss
     
     def configure_optimizers(self):
