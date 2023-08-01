@@ -176,14 +176,37 @@ class MeshNet(pl.LightningModule):
         if not self.stats_loaded:
             self.load_stats()
             self.stats_loaded = True
+
         pred = unnormalize(
             data=self(batch, split='train'),
             mean=self.mean_vec_y_train,
             std=self.std_vec_y_train
         )
+
         loss = self.loss(pred, batch, split='test')
         self.log("test/loss", loss, on_step=False, on_epoch=True, prog_bar=False, logger=True, batch_size=batch.x.shape[0])
+        self.generate_mesh(batch=batch, pred=pred)
 
+        return loss
+    
+    def configure_optimizers(self):
+        """Configure the optimizer and the learning rate scheduler."""
+        optimizer = self.optimizer(self.parameters())
+
+        if self.lr_scheduler is None:
+            return [optimizer]
+        else:
+            lr_scheduler = self.lr_scheduler(optimizer)
+            return [optimizer], [lr_scheduler]
+        
+    def load_stats(self):
+        """Load statistics from the dataset."""
+        train_stats, val_stats, test_stats = load_stats(self.data_dir, self.device)
+        self.mean_vec_x_train, self.std_vec_x_train, self.mean_vec_edge_train, self.std_vec_edge_train, self.mean_vec_y_train, self.std_vec_y_train = train_stats
+        self.mean_vec_x_val, self.std_vec_x_val, self.mean_vec_edge_val, self.std_vec_edge_val, self.mean_vec_y_val, self.std_vec_y_val = val_stats
+        self.mean_vec_x_test, self.std_vec_x_test, self.mean_vec_edge_test, self.std_vec_edge_test, self.mean_vec_y_test, self.std_vec_y_test = test_stats
+
+    def generate_mesh(self, batch: Data, pred: torch.Tensor) -> None:
         with open (osp.join(self.data_dir, 'raw' , 'geo', 'cad_{:03d}.geo'.format(batch.name[0])), 'r+') as f:
             # read the file
             lines = f.readlines()
@@ -280,23 +303,4 @@ class MeshNet(pl.LightningModule):
             
             gmsh.clear()
             geometry.__exit__()
-
-        return loss
-    
-    def configure_optimizers(self):
-        """Configure the optimizer and the learning rate scheduler."""
-        optimizer = self.optimizer(self.parameters())
-
-        if self.lr_scheduler is None:
-            return [optimizer]
-        else:
-            lr_scheduler = self.lr_scheduler(optimizer)
-            return [optimizer], [lr_scheduler]
-        
-    def load_stats(self):
-        """Load statistics from the dataset."""
-        train_stats, val_stats, test_stats = load_stats(self.data_dir, self.device)
-        self.mean_vec_x_train, self.std_vec_x_train, self.mean_vec_edge_train, self.std_vec_edge_train, self.mean_vec_y_train, self.std_vec_y_train = train_stats
-        self.mean_vec_x_val, self.std_vec_x_val, self.mean_vec_edge_val, self.std_vec_edge_val, self.mean_vec_y_val, self.std_vec_y_val = val_stats
-        self.mean_vec_x_test, self.std_vec_x_test, self.mean_vec_edge_test, self.std_vec_edge_test, self.mean_vec_y_test, self.std_vec_y_test = test_stats
     
