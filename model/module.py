@@ -229,13 +229,13 @@ class MeshNet(pl.LightningModule):
             # extract edges
             lines__ = torch.Tensor([[int(p) for p in line.split('{')[1].split('}')[0].split(',')] for line in lines__]).long()
             circles = torch.Tensor([[int(p) for p in line.split('{')[1].split('}')[0].split(',')] for line in circles]).long()[:,[0,2]]
-            edges = torch.cat([lines__, circles], dim=0) - 1
+            edges = torch.cat([lines__, circles], dim=0)
 
-            # remove center points
+            # list center points
             center_points = []
-            for i in range(points.shape[0]):
-                if not i in edges:
-                    center_points.append(i)
+            for id in list(points_dict.keys()):
+                if not id in edges:
+                    center_points.append(id)
 
             # extract curve loops
             curve_loops_dict = {}
@@ -252,9 +252,9 @@ class MeshNet(pl.LightningModule):
             # Add points
             points_gmsh = []
             count = 0
-            for i, point in enumerate(points):
-                if i not in center_points:
-                    points_gmsh.append(model.add_point(x=point, mesh_size=pred[i-count]))
+            for id, point in points_dict.items():
+                if id not in center_points:
+                    points_gmsh.append(model.add_point(x=point, mesh_size=pred[(id-1)-count]))
                 else:
                     points_gmsh.append(model.add_point(x=point, mesh_size=1.0))
                     count += 1
@@ -265,7 +265,7 @@ class MeshNet(pl.LightningModule):
                 channnel_lines.append(model.add_line(p0=points_gmsh[edge[0]], p1=points_gmsh[edge[1]]))
 
             start = 4
-            while (start+4 <= points.shape[0]):
+            while (start+4 <= len(points_dict)):
                 channnel_lines.append(model.add_ellipse_arc(
                     start=points_gmsh[start],
                     center=points_gmsh[start+1],
