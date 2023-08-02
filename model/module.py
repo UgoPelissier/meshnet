@@ -263,7 +263,7 @@ class MeshNet(pl.LightningModule):
             # Add edges
             channnel_lines = []
             for edge in edges[:4,:]:
-                channnel_lines.append(model.add_line(p0=points_gmsh[edge[0]], p1=points_gmsh[edge[1]]))
+                channnel_lines.append(model.add_line(p0=points_gmsh[edge[0]-1], p1=points_gmsh[edge[1]-1]))
 
             start = 4
             while (start+4 <= len(points_dict)):
