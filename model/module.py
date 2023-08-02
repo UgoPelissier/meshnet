@@ -6,9 +6,7 @@ import gmsh
 
 from meshnet.utils.stats import load_stats, normalize, unnormalize
 from meshnet.utils.utils import get_next_version
-from meshnet.data.dataset import NodeType
 from meshnet.model.processor import ProcessorLayer
-from meshnet.model.mesh import post_process
 
 import torch
 from torch.nn import Sequential, Linear, ReLU, LayerNorm
