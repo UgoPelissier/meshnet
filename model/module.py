@@ -221,9 +221,10 @@ class MeshNet(pl.LightningModule):
             circles = [line for line in lines if line.startswith('Ellipse')]
 
             # extract coordinates and mesh size
-            points = torch.Tensor([[float(p) for p in line.split('{')[1].split('}')[0].split(',')] for line in points])
-            y = points[:, -1]
-            points = points[:, :-1]
+            points_dict = {}
+            for line in points:
+                id = int(line.split('(')[1].split(')')[0])
+                points_dict[id] = [float(p) for p in line.split('{')[1].split('}')[0].split(',')][:3]
 
             # extract edges
             lines__ = torch.Tensor([[int(p) for p in line.split('{')[1].split('}')[0].split(',')] for line in lines__]).long()
