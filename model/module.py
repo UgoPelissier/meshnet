@@ -225,6 +225,7 @@ class MeshNet(pl.LightningModule):
             for line in points:
                 id = int(line.split('(')[1].split(')')[0])
                 points_dict[id] = [float(p) for p in line.split('{')[1].split('}')[0].split(',')][:3]
+            points_dict = dict(sorted(points_dict.items()))
 
             # extract edges
             lines__ = torch.Tensor([[int(p) for p in line.split('{')[1].split('}')[0].split(',')] for line in lines__]).long()
@@ -254,7 +255,7 @@ class MeshNet(pl.LightningModule):
             count = 0
             for id, point in points_dict.items():
                 if id not in center_points:
-                    points_gmsh.append(model.add_point(x=point, mesh_size=pred[(id-1)-count]))
+                    points_gmsh.append(model.add_point(x=point, mesh_size=pred[(id-1)-count].cpu().item()))
                 else:
                     points_gmsh.append(model.add_point(x=point, mesh_size=1.0))
                     count += 1
@@ -267,22 +268,22 @@ class MeshNet(pl.LightningModule):
             start = 4
             while (start+4 <= len(points_dict)):
                 channnel_lines.append(model.add_ellipse_arc(
-                    start=points_gmsh[start],
-                    center=points_gmsh[start+1],
+                    start=points_gmsh[start+1],
+                    center=points_gmsh[start],
                     point_on_major_axis=points_gmsh[start+2],
                     end=points_gmsh[start+2]
                 ))
                 channnel_lines.append(model.add_ellipse_arc(
                     start=points_gmsh[start+2],
-                    center=points_gmsh[start+1],
+                    center=points_gmsh[start],
                     point_on_major_axis=points_gmsh[start+3],
                     end=points_gmsh[start+3]
                 ))
                 channnel_lines.append(model.add_ellipse_arc(
                     start=points_gmsh[start+3],
-                    center=points_gmsh[start+1],
-                    point_on_major_axis=points_gmsh[start],
-                    end=points_gmsh[start]
+                    center=points_gmsh[start],
+                    point_on_major_axis=points_gmsh[start+1],
+                    end=points_gmsh[start+1]
                 ))
                 start += 4
 
