@@ -183,7 +183,12 @@ class MeshNet(pl.LightningModule):
 
         loss = self.loss(pred, batch, split='test')
         self.log("test/loss", loss, on_step=False, on_epoch=True, prog_bar=False, logger=True, batch_size=batch.x.shape[0])
-        self.generate_mesh(batch=batch, pred=pred)
+        self.generate_mesh(
+            cad_path = osp.join(self.data_dir, 'raw' , 'geo', 'cad_{:03d}.geo'.format(batch.name[0])),
+            batch=batch,
+            pred=pred,
+            save_dir=self.test_folder
+        )
 
         return loss
     
@@ -204,8 +209,8 @@ class MeshNet(pl.LightningModule):
         self.mean_vec_x_val, self.std_vec_x_val, self.mean_vec_edge_val, self.std_vec_edge_val, self.mean_vec_y_val, self.std_vec_y_val = val_stats
         self.mean_vec_x_test, self.std_vec_x_test, self.mean_vec_edge_test, self.std_vec_edge_test, self.mean_vec_y_test, self.std_vec_y_test = test_stats
 
-    def generate_mesh(self, batch: Data, pred: torch.Tensor) -> None:
-        with open (osp.join(self.data_dir, 'raw' , 'geo', 'cad_{:03d}.geo'.format(batch.name[0])), 'r+') as f:
+    def generate_mesh(self, cad_path: str, batch: Data, pred: torch.Tensor, save_dir: str) -> None:
+        with open (cad_path, 'r+') as f:
             # read the file
             lines = f.readlines()
             lines = [line.strip() for line in lines]
@@ -298,8 +303,8 @@ class MeshNet(pl.LightningModule):
 
             geometry.generate_mesh(dim=2)
             
-            gmsh.write(osp.join(self.test_folder, "msh", 'mesh_{:03d}.msh'.format(batch.name[0])))
-            gmsh.write(osp.join(self.test_folder, "vtk", 'mesh_{:03d}.vtk'.format(batch.name[0])))
+            gmsh.write(osp.join(save_dir, "msh", 'mesh_{:03d}.msh'.format(batch.name[0])))
+            gmsh.write(osp.join(save_dir, "vtk", 'mesh_{:03d}.vtk'.format(batch.name[0])))
             
             gmsh.clear()
             geometry.__exit__()
