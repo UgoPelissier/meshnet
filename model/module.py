@@ -264,25 +264,25 @@ class MeshNet(pl.LightningModule):
                     count += 1
 
             # Add edges
-            channnel_lines = []
+            channel_lines = []
             for edge in edges[:4,:]:
-                channnel_lines.append(model.add_line(p0=points_gmsh[edge[0]-1], p1=points_gmsh[edge[1]-1]))
+                channel_lines.append(model.add_line(p0=points_gmsh[edge[0]-1], p1=points_gmsh[edge[1]-1]))
 
             start = 4
             while (start+4 <= len(points_dict)):
-                channnel_lines.append(model.add_ellipse_arc(
+                channel_lines.append(model.add_ellipse_arc(
                     start=points_gmsh[start+1],
                     center=points_gmsh[start],
                     point_on_major_axis=points_gmsh[start+2],
                     end=points_gmsh[start+2]
                 ))
-                channnel_lines.append(model.add_ellipse_arc(
+                channel_lines.append(model.add_ellipse_arc(
                     start=points_gmsh[start+2],
                     center=points_gmsh[start],
                     point_on_major_axis=points_gmsh[start+3],
                     end=points_gmsh[start+3]
                 ))
-                channnel_lines.append(model.add_ellipse_arc(
+                channel_lines.append(model.add_ellipse_arc(
                     start=points_gmsh[start+3],
                     center=points_gmsh[start],
                     point_on_major_axis=points_gmsh[start+1],
@@ -293,13 +293,19 @@ class MeshNet(pl.LightningModule):
             # Add curve loops
             channel_loop = []
             for id, curve_loop in curve_loops_dict.items():
-                channel_loop.append(model.add_curve_loop(curves=[channnel_lines[i-1] for i in curve_loop]))
+                channel_loop.append(model.add_curve_loop(curves=[channel_lines[i-1] for i in curve_loop]))
 
             # Create a plane surface for meshing
-            model.add_plane_surface(curve_loop=channel_loop[0], holes=channel_loop[1:])
+            plane_surface = model.add_plane_surface(curve_loop=channel_loop[0], holes=channel_loop[1:])
 
             # Call gmsh kernel before add physical entities
             model.synchronize()
+
+            model.add_physical(entities=[plane_surface], label="VOLUME")
+            model.add_physical(entities=[channel_lines[0]], label="INFLOW")
+            model.add_physical(entities=[channel_lines[2]], label="OUTFLOW")
+            model.add_physical(entities=[channel_lines[1], channel_lines[3]], label="WALL_BOUNDARY")
+            model.add_physical(entities=channel_lines[4:], label="OBSTACLE")
 
             geometry.generate_mesh(dim=2)
             
