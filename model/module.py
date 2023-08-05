@@ -329,6 +329,10 @@ class MeshNet(pl.LightningModule):
                     elif i in mesh.cell_sets['OBSTACLE'][0]:
                         label = 4
                     f.write(f'{points[i,0]} {points[i,1]} {label}\n')
+                for i in range(num_triangles):
+                    f.write(f'{triangles[i,0]} {triangles[i,1]} {triangles[i,2]}\n')
+                for i in range(num_lines):
+                    f.write(f'{lines[i,0]} {lines[i,1]}\n')
             
             gmsh.write(osp.join(save_dir, "msh", 'mesh_{:03d}.msh'.format(batch.name[0])))
             gmsh.write(osp.join(save_dir, "vtk", 'mesh_{:03d}.vtk'.format(batch.name[0])))
