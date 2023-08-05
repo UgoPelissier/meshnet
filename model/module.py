@@ -334,7 +334,7 @@ class MeshNet(pl.LightningModule):
                 for i in range(num_lines):
                     f.write(f'{lines[i,0]} {lines[i,1]}\n')
             
-            gmsh.write(osp.join(save_dir, "msh", 'mesh_{:03d}.msh'.format(batch.name[0])))
+            # gmsh.write(osp.join(save_dir, "msh", 'mesh_{:03d}.msh'.format(batch.name[0])))
             gmsh.write(osp.join(save_dir, "vtk", 'mesh_{:03d}.vtk'.format(batch.name[0])))
             
             gmsh.clear()
