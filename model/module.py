@@ -307,34 +307,7 @@ class MeshNet(pl.LightningModule):
             model.add_physical(entities=[channel_lines[1], channel_lines[3]], label="WALL_BOUNDARY")
             model.add_physical(entities=channel_lines[4:], label="OBSTACLE")
 
-            mesh = geometry.generate_mesh(dim=2)
-            num_points = mesh.points.shape[0]
-            num_lines = mesh.cells[0].data.shape[0]
-            num_triangles = mesh.cells[1].data.shape[0]
-            points = mesh.points[:,:2]
-            lines = mesh.cells[0].data
-            triangles = mesh.cells[1].data
-
-            # Write mesh to file
-            with open(osp.join(save_dir, 'msh', 'mesh_{:03d}.msh'.format(batch.name[0])), 'w') as f:
-                f.write(f'{num_points} {num_triangles} {num_lines}\n')
-                for i in range(num_points):
-                    label = 0
-                    if i in mesh.cell_sets['INFLOW'][0]:
-                        label = 1
-                    elif i in mesh.cell_sets['OUTFLOW'][0]:
-                        label = 2
-                    elif i in mesh.cell_sets['WALL_BOUNDARY'][0]:
-                        label = 3
-                    elif i in mesh.cell_sets['OBSTACLE'][0]:
-                        label = 4
-                    f.write(f'{points[i,0]} {points[i,1]} {label}\n')
-                for i in range(num_triangles):
-                    f.write(f'{triangles[i,0]} {triangles[i,1]} {triangles[i,2]}\n')
-                for i in range(num_lines):
-                    f.write(f'{lines[i,0]} {lines[i,1]}\n')
-            
-            # gmsh.write(osp.join(save_dir, "msh", 'mesh_{:03d}.msh'.format(batch.name[0])))
+            geometry.generate_mesh(dim=2)
             gmsh.write(osp.join(save_dir, "vtk", 'mesh_{:03d}.vtk'.format(batch.name[0])))
             
             gmsh.clear()
