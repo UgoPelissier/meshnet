@@ -132,18 +132,48 @@ class FreeFem(Dataset):
             # extract points, lines and circles
             points = [line for line in lines if line.startswith('Point')]
             lines__ = [line for line in lines if line.startswith('Line')]
-            physical_curves = [line for line in lines if line.startswith('Physical Curve')]
             circles = [line for line in lines if line.startswith('Ellipse')]
+            extrudes = [line for line in lines if line.startswith('Extrude')]
+            physical_curves = [line for line in lines if line.startswith('Physical Curve')]
 
             # extract coordinates and mesh size
+            points_id = torch.Tensor([int(line.split('(')[1].split(')')[0]) for line in points]).long()
+            _, indices = torch.sort(points_id)
             points = torch.Tensor([[float(p) for p in line.split('{')[1].split('}')[0].split(',')] for line in points])
+            points = points[indices]
             y = points[:, -1]
             points = points[:, :-1]
 
             # extract edges
+            lines_id = torch.Tensor([int(line.split('(')[1].split(')')[0]) for line in lines__]).long()
             lines__ = torch.Tensor([[int(p) for p in line.split('{')[1].split('}')[0].split(',')] for line in lines__]).long()
+            circles_id = torch.Tensor([int(line.split('(')[1].split(')')[0]) for line in circles]).long()
             circles = torch.Tensor([[int(p) for p in line.split('{')[1].split('}')[0].split(',')] for line in circles]).long()[:,[0,2]]
-            edges = torch.cat([lines__, circles], dim=0) -1
+            edges_id = torch.cat([lines_id, circles_id], dim=0) - 1
+            _, indices = torch.sort(edges_id)
+            edges = torch.cat([lines__, circles], dim=0)-1
+            edges = edges[indices]
+
+            # add extruded points and edges
+            for extrude in extrudes:
+                z_extrude = float(extrude.split('}')[0].split(',')[-1])
+                extruded_curves_id = torch.Tensor([int(extrude.split('{')[3:][i].split('}')[0]) for i in range(len(extrude.split('{')[3:]))]).long() - 1
+                extruded_points_id = []
+                new_extruded_points_id = []
+                for id in extruded_curves_id:
+                    for i in edges[id]:
+                        if not i in extruded_points_id:
+                            extruded_points_id.append(i)
+                            new_extruded_points_id.append(len(points))
+                            points = torch.cat([points, torch.Tensor([points[i,0], points[i,1], z_extrude]).unsqueeze(0)], dim=0)
+                            y = torch.cat([y, torch.Tensor([z_extrude])], dim=0)
+                extruded_points_id = torch.Tensor(extruded_points_id).long()
+                new_extruded_points_id = torch.Tensor(new_extruded_points_id).long()
+
+                new_extruded_curves = edges[extruded_curves_id]
+                for i in range(len(extruded_points_id)):
+                    new_extruded_curves = torch.where(new_extruded_curves == extruded_points_id[i], new_extruded_points_id[i], new_extruded_curves)
+                edges = torch.cat([edges, new_extruded_curves], dim=0)
 
             count = 0
             for i in range(points.shape[0]):
