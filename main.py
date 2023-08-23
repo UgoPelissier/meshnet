@@ -38,6 +38,7 @@ class MyLightningCLI(LightningCLI):
                 "model.wdir": "/home/eleve05/adaptnet/meshnet/", # Working directory
                 "model.data_dir": "/home/eleve05/adaptnet/meshnet/data/stokes/", # Data directory
                 "model.logs": "/home/eleve05/adaptnet/meshnet/logs/", # Logs directory
+                "model.dim": 2,
                 "model.num_layers": 15,
                 "model.input_dim_node": 5,
                 "model.input_dim_edge": 8,
