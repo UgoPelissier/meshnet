@@ -166,14 +166,15 @@ class FreeFem(Dataset):
                             extruded_points_id.append(i)
                             new_extruded_points_id.append(len(points))
                             points = torch.cat([points, torch.Tensor([points[i,0], points[i,1], z_extrude]).unsqueeze(0)], dim=0)
-                            y = torch.cat([y, torch.Tensor([z_extrude])], dim=0)
+                            y = torch.cat([y, torch.Tensor([y[i]])], dim=0)
                 extruded_points_id = torch.Tensor(extruded_points_id).long()
                 new_extruded_points_id = torch.Tensor(new_extruded_points_id).long()
 
                 new_extruded_curves = edges[extruded_curves_id]
                 for i in range(len(extruded_points_id)):
                     new_extruded_curves = torch.where(new_extruded_curves == extruded_points_id[i], new_extruded_points_id[i], new_extruded_curves)
-                edges = torch.cat([edges, new_extruded_curves], dim=0)
+                extruded_connexion = torch.cat([extruded_points_id.unsqueeze(dim=1), new_extruded_points_id.unsqueeze(dim=1)], dim=1)
+                edges = torch.cat([edges, extruded_connexion, new_extruded_curves], dim=0)
 
             count = 0
             for i in range(points.shape[0]):
