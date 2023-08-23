@@ -22,6 +22,7 @@ class MeshNet(pl.LightningModule):
             wdir: str,
             data_dir: str,
             logs: str,
+            dim: int,
             num_layers: int,
             input_dim_node: int,
             input_dim_edge: int,
@@ -35,6 +36,7 @@ class MeshNet(pl.LightningModule):
         self.wdir = wdir
         self.data_dir = data_dir
         self.logs = logs
+        self.dim = dim
         self.num_layers = num_layers
 
         # encoder convert raw inputs into latent embeddings
@@ -227,7 +229,11 @@ class MeshNet(pl.LightningModule):
             points_dict = {}
             for line in points:
                 id = int(line.split('(')[1].split(')')[0])
-                points_dict[id] = [float(p) for p in line.split('{')[1].split('}')[0].split(',')][:3]
+                if self.dim == 3:
+                    if id <= 4*(1+len(extrudes)):
+                        points_dict[id] = [float(p) for p in line.split('{')[1].split('}')[0].split(',')][:3]
+                else:
+                    points_dict[id] = [float(p) for p in line.split('{')[1].split('}')[0].split(',')][:3]
             points_dict = dict(sorted(points_dict.items()))
 
             # extract edges
