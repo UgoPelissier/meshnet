@@ -221,8 +221,8 @@ class MeshNet(pl.LightningModule):
             # extract points, lines and circles
             points = [line for line in lines if line.startswith('Point')]
             lines__ = [line for line in lines if line.startswith('Line')]
-            curve_loops = [line for line in lines if line.startswith('Curve Loop')]
             circles = [line for line in lines if line.startswith('Ellipse')]
+            curve_loops = [line for line in lines if line.startswith('Curve Loop')]
             extrudes = [line for line in lines if line.startswith('Extrude')]
 
             # extract coordinates and mesh size
@@ -251,8 +251,17 @@ class MeshNet(pl.LightningModule):
             curve_loops_dict = {}
             for curve_loop in curve_loops:
                 id = int(curve_loop.split('(')[1].split(')')[0])
-                curve = [int(p) for p in curve_loop.split('{')[1].split('}')[0].split(',')]
-                curve_loops_dict[id] = curve
+                if self.dim == 3:
+                    if (id <= 1+len(extrudes)):
+                        curve = [int(p) for p in curve_loop.split('{')[1].split('}')[0].split(',')]
+                        curve_loops_dict[id] = curve
+                else:
+                    curve = [int(p) for p in curve_loop.split('{')[1].split('}')[0].split(',')]
+                    curve_loops_dict[id] = curve
+
+            extrude_dict = {}
+            for extrude in extrudes:
+                extrude_dict[float(extrude.split('}')[0].split(',')[-1])] = [int(extrude.split('{')[3:][i].split('}')[0]) for i in range(len(extrude.split('{')[3:]))]
 
             # Initialize empty geometry using the build in kernel in GMSH
             geometry = pygmsh.geo.Geometry()
@@ -271,8 +280,8 @@ class MeshNet(pl.LightningModule):
 
             # Add edges
             channel_lines = []
-            for edge in edges[:4,:]:
-                channel_lines.append(model.add_line(p0=points_gmsh[edge[0]-1], p1=points_gmsh[edge[1]-1]))
+            for i in range(0, 8, 2):
+                channel_lines.append(model.add_line(p0=points_gmsh[edges[i][0]-1], p1=points_gmsh[edges[i][1]-1]))
 
             start = 4
             while (start+4 <= len(points_dict)):
@@ -304,16 +313,27 @@ class MeshNet(pl.LightningModule):
             # Create a plane surface for meshing
             plane_surface = model.add_plane_surface(curve_loop=channel_loop[0], holes=channel_loop[1:])
 
+            if self.dim == 3:
+                # Extrude along z-axis
+                _, solid, _ = model.extrude(plane_surface, translation_axis=(0, 0, list(extrude_dict.keys())[0]))
+
             # Call gmsh kernel before add physical entities
             model.synchronize()
 
-            model.add_physical(entities=[plane_surface], label="VOLUME")
-            model.add_physical(entities=[channel_lines[0]], label="INFLOW")
-            model.add_physical(entities=[channel_lines[2]], label="OUTFLOW")
-            model.add_physical(entities=[channel_lines[1], channel_lines[3]], label="WALL_BOUNDARY")
-            model.add_physical(entities=channel_lines[4:], label="OBSTACLE")
+            # Add physical entities
+            if self.dim == 2:
+                model.add_physical(entities=[plane_surface], label="VOLUME")
+                model.add_physical(entities=[channel_lines[0]], label="INFLOW")
+                model.add_physical(entities=[channel_lines[2]], label="OUTFLOW")
+                model.add_physical(entities=[channel_lines[1], channel_lines[3]], label="WALL_BOUNDARY")
+                model.add_physical(entities=channel_lines[4:], label="OBSTACLE")
+            elif self.dim == 3:
+                model.add_physical(entities=[plane_surface], label="SURFACE")
+                model.add_physical(entities=[solid], label="VOLUME")
+            else:
+                raise ValueError(f'Invalid dimension: {self.dim}')
 
-            geometry.generate_mesh(dim=2)
+            geometry.generate_mesh(dim=self.dim)
             gmsh.write(osp.join(save_dir, "vtk", 'mesh_{:03d}.vtk'.format(batch.name[0])))
             
             gmsh.clear()
