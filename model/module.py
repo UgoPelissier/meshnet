@@ -220,8 +220,8 @@ class MeshNet(pl.LightningModule):
             points = [line for line in lines if line.startswith('Point')]
             lines__ = [line for line in lines if line.startswith('Line')]
             curve_loops = [line for line in lines if line.startswith('Curve Loop')]
-            physical_curves = [line for line in lines if line.startswith('Physical Curve')]
             circles = [line for line in lines if line.startswith('Ellipse')]
+            extrudes = [line for line in lines if line.startswith('Extrude')]
 
             # extract coordinates and mesh size
             points_dict = {}
