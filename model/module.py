@@ -280,7 +280,7 @@ class MeshNet(pl.LightningModule):
 
             # Add edges
             channel_lines = []
-            for i in range(0, 8, 2):
+            for i in range(0, 4*(self.dim-1), self.dim-1):
                 channel_lines.append(model.add_line(p0=points_gmsh[edges[i][0]-1], p1=points_gmsh[edges[i][1]-1]))
 
             start = 4
