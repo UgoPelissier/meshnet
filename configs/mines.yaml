@@ -67,9 +67,9 @@ trainer:
   default_root_dir: null
 model:
   wdir: /home/eleve05/adaptnet/meshnet/
-  data_dir: /home/eleve05/adaptnet/meshnet/data/stokes/
+  data_dir: /home/eleve05/adaptnet/meshnet/data/stokes2/
   logs: /home/eleve05/adaptnet/meshnet/logs/
-  dim: 3
+  dim: 2
   num_layers: 15
   input_dim_node: 5
   input_dim_edge: 8
@@ -92,7 +92,7 @@ model:
       fused: null
   lr_scheduler: null
 data:
-  data_dir: /home/eleve05/adaptnet/meshnet/data/stokes/
+  data_dir: /home/eleve05/adaptnet/meshnet/data/stokes2/
   val_size: 0.15
   test_size: 0.1
   batch_size: 1
