@@ -71,6 +71,7 @@ class CAD(Dataset):
         pass
 
     def node_type(self, label: str) -> int:
+        """Return the code for the one-hot vector representing the node type."""
         if label == 'INFLOW':
             return NodeType.INFLOW
         elif label == 'OUTFLOW':
