@@ -50,6 +50,34 @@ Last step is to move the `stokes2` and `stokes3` folders inside the `data` folde
 └── README.md
 ```
 
+### Train the model
+To train the model, run:
+```bash
+python main.py fit -c configs/safran.yaml
+```
+
+You can change the number of GPUs used by the model by changing the `gpus` parameter in the `configs/safran.yaml` file. You can also change the number of epochs, the learning rate, the batch size, etc. in this file.
+
+You can get help on the command line arguments by running:
+```bash
+python main.py fit --help
+```
+
+### Evaluate the model
+To evaluate the model training, run:
+```bash
+tensorboard --logdir=logs/
+```
+
+### Test the model
+To test the model, run:
+```bash
+python main.py test -c configs/safran.yaml --ckpt_path $ckpt_path
+```
+where `$ckpt_path` is the path to the checkpoint file located in the `logs/version_$version/checkpoints/` folder.
+
+It will create a new folder in the `logs/` folder containing the meshes resulting from the predictions of the model (`vtk` files).
+
 ## Setup @Ext™
 
 ### Conda environment
@@ -63,6 +91,34 @@ Follow the same instructions as for the Safran setup except that the data is ava
 ```bash
 git clone https://github.com/UgoPelissier/dataset.git
 ```
+
+### Train the model
+To train the model, run:
+```bash
+python main.py fit -c configs/mines.yaml
+```
+
+You can change the number of GPUs used by the model by changing the `gpus` parameter in the `configs/mines.yaml` file. You can also change the number of epochs, the learning rate, the batch size, etc. in this file.
+
+You can get help on the command line arguments by running:
+```bash
+python main.py fit --help
+```
+
+### Evaluate the model
+To evaluate the model training, run:
+```bash
+tensorboard --logdir=logs/
+```
+
+### Test the model
+To test the model, run:
+```bash
+python main.py test -c configs/mines.yaml --ckpt_path $ckpt_path
+```
+where `$ckpt_path` is the path to the checkpoint file located in the `logs/version_$version/checkpoints/` folder.
+
+It will create a new folder in the `logs/` folder containing the meshes resulting from the predictions of the model (`vtk` files).
 
 ## Contact
 
