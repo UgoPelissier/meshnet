@@ -24,8 +24,8 @@ class NodeType(enum.IntEnum):
     SIZE = 5
 
 
-class FreeFem(Dataset):
-    """FreeFem dataset."""
+class CAD(Dataset):
+    """CAD dataset."""
     def __init__(
             self,
             root: str,

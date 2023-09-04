@@ -1,4 +1,4 @@
-from meshnet.data.datamodule import FreeFemDataModule
+from meshnet.data.datamodule import CadDataModule
 from meshnet.model.module import MeshNet
 
 from lightning.pytorch.cli import LightningCLI, LightningArgumentParser
@@ -57,6 +57,6 @@ class MyLightningCLI(LightningCLI):
 if __name__ == '__main__':
     cli = MyLightningCLI(
         model_class=MeshNet,
-        datamodule_class=FreeFemDataModule,
+        datamodule_class=CadDataModule,
         seed_everything_default=42,
     )
