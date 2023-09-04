@@ -30,27 +30,27 @@ class MyLightningCLI(LightningCLI):
             {
                 "data.data_dir": "/home/eleve05/adaptnet/meshnet/data/stokes/", # Data directory
 
-                "data.val_size": 0.15,
-                "data.test_size": 0.1,
-                "data.batch_size": 1,
-                "data.num_workers": 4,
+                "data.val_size": 0.15, # Validation size
+                "data.test_size": 0.1, # Test size
+                "data.batch_size": 1, # Batch size
+                "data.num_workers": 4, # Number of workers
 
                 "model.wdir": "/home/eleve05/adaptnet/meshnet/", # Working directory
                 "model.data_dir": "/home/eleve05/adaptnet/meshnet/data/stokes/", # Data directory
                 "model.logs": "/home/eleve05/adaptnet/meshnet/logs/", # Logs directory
-                "model.dim": 2,
-                "model.num_layers": 15,
-                "model.input_dim_node": 5,
-                "model.input_dim_edge": 8,
-                "model.hidden_dim": 128,
-                "model.output_dim": 1,
-                "model.optimizer": "torch.optim.AdamW",
+                "model.dim": 2, # Dimension of the problem
+                "model.num_layers": 15, # Number of layers
+                "model.input_dim_node": 5, # Input dimension of the node features
+                "model.input_dim_edge": 8, # Input dimension of the edge features
+                "model.hidden_dim": 128, # Hidden dimension
+                "model.output_dim": 1, # Output dimension
+                "model.optimizer": "torch.optim.AdamW", # Optimizer
 
-                "trainer.max_epochs": 100,
-                "trainer.accelerator": "gpu",
-                "trainer.devices": 1,
-                "trainer.logger": logger,
-                "trainer.callbacks": default_callbacks,
+                "trainer.max_epochs": 100, # Maximum number of epochs
+                "trainer.accelerator": "gpu", # Accelerator
+                "trainer.devices": 1, # Number of devices
+                "trainer.logger": logger, # Logger
+                "trainer.callbacks": default_callbacks, # Callbacks
             },
         )
 
