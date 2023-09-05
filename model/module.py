@@ -152,6 +152,7 @@ class MeshNet(pl.LightningModule):
         """Set up folders for validation and test sets"""
         os.makedirs(self.test_folder, exist_ok=True)
         os.makedirs(osp.join(self.test_folder, "vtk"), exist_ok=True)
+        os.makedirs(osp.join(self.test_folder, "msh"), exist_ok=True)
 
     def training_step(self, batch, batch_idx: int) -> torch.Tensor:
         """Training step of the model."""
@@ -333,7 +334,8 @@ class MeshNet(pl.LightningModule):
                 raise ValueError(f'Invalid dimension: {self.dim}')
 
             geometry.generate_mesh(dim=self.dim)
-            gmsh.write(osp.join(save_dir, "vtk", 'mesh_{:03d}.vtk'.format(batch.name[0])))
+            gmsh.write(osp.join(save_dir, "vtk", 'cad_{:03d}.vtk'.format(batch.name[0])))
+            gmsh.write(osp.join(save_dir, "msh", 'cad_{:03d}.msh'.format(batch.name[0])))
             
             gmsh.clear()
             geometry.__exit__()
