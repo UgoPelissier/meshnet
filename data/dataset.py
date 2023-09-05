@@ -23,6 +23,19 @@ class NodeType(enum.IntEnum):
     OBSTACLE = 4
     SIZE = 5
 
+def node_type(label: str) -> int:
+    """Return the code for the one-hot vector representing the node type."""
+    if label == 'INFLOW':
+        return NodeType.INFLOW
+    elif label == 'OUTFLOW':
+        return NodeType.OUTFLOW
+    elif label == 'WALL_BOUNDARY':
+        return NodeType.WALL_BOUNDARY
+    elif label == 'OBSTACLE':
+        return NodeType.OBSTACLE
+    else:
+        return NodeType.NORMAL
+
 
 class CAD(Dataset):
     """CAD dataset."""
@@ -69,19 +82,6 @@ class CAD(Dataset):
 
     def download(self):
         pass
-
-    def node_type(self, label: str) -> int:
-        """Return the code for the one-hot vector representing the node type."""
-        if label == 'INFLOW':
-            return NodeType.INFLOW
-        elif label == 'OUTFLOW':
-            return NodeType.OUTFLOW
-        elif label == 'WALL_BOUNDARY':
-            return NodeType.WALL_BOUNDARY
-        elif label == 'OBSTACLE':
-            return NodeType.OBSTACLE
-        else:
-            return NodeType.NORMAL
         
     def update_stats(self, x: torch.Tensor, edge_attr: torch.Tensor, y: torch.Tensor) -> None:
         """Update the mean and std of the node features, edge features, and output parameters."""
@@ -200,7 +200,7 @@ class CAD(Dataset):
                 label = curve.split('(')[1].split('"')[1]
                 lines = curve.split('{')[1].split('}')[0].split(',')
                 for line in lines:
-                    edge_types[int(line)-1] = self.node_type(label)
+                    edge_types[int(line)-1] = node_type(label)
             tmp = torch.zeros(edges.shape[0], dtype=torch.long)
             for i in range(len(permutation)):
                 tmp[permutation[i]] = edge_types[i]
