@@ -5,7 +5,7 @@ import pygmsh
 import gmsh
 
 from meshnet.utils.stats import load_stats, normalize, unnormalize
-from meshnet.utils.utils import get_next_version
+from meshnet.utils.utils import get_next_version, generate_mesh_2d
 from meshnet.model.processor import ProcessorLayer
 
 import torch
@@ -185,12 +185,14 @@ class MeshNet(pl.LightningModule):
 
         loss = self.loss(pred, batch, split='test')
         self.log("test/loss", loss, on_step=False, on_epoch=True, prog_bar=False, logger=True, batch_size=batch.x.shape[0])
-        self.generate_mesh(
-            cad_path = osp.join(self.data_dir, 'raw' , 'geo', 'cad_{:03d}.geo'.format(batch.name[0])),
-            batch=batch,
-            pred=pred,
-            save_dir=self.test_folder
-        )
+
+        if self.dim == 2:
+            generate_mesh_2d(
+                cad_path = osp.join(self.data_dir, 'raw', 'cad_{:03d}.geo'.format(batch.name[0])),
+                batch=batch,
+                pred=pred,
+                save_dir=self.test_folder
+            )
 
         return loss
     
@@ -210,133 +212,3 @@ class MeshNet(pl.LightningModule):
         self.mean_vec_x_train, self.std_vec_x_train, self.mean_vec_edge_train, self.std_vec_edge_train, self.mean_vec_y_train, self.std_vec_y_train = train_stats
         self.mean_vec_x_val, self.std_vec_x_val, self.mean_vec_edge_val, self.std_vec_edge_val, self.mean_vec_y_val, self.std_vec_y_val = val_stats
         self.mean_vec_x_test, self.std_vec_x_test, self.mean_vec_edge_test, self.std_vec_edge_test, self.mean_vec_y_test, self.std_vec_y_test = test_stats
-
-    def generate_mesh(self, cad_path: str, batch: Data, pred: torch.Tensor, save_dir: str) -> None:
-        with open (cad_path, 'r+') as f:
-            # read the file
-            lines = f.readlines()
-            lines = [line.strip() for line in lines]
-            lines = [line for line in lines if not (line.startswith('//') or line.startswith('SetFactory'))]
-
-            # extract points, lines and circles
-            points = [line for line in lines if line.startswith('Point')]
-            lines__ = [line for line in lines if line.startswith('Line')]
-            circles = [line for line in lines if line.startswith('Ellipse')]
-            curve_loops = [line for line in lines if line.startswith('Curve Loop')]
-            extrudes = [line for line in lines if line.startswith('Extrude')]
-
-            # extract coordinates and mesh size
-            points_dict = {}
-            for line in points:
-                id = int(line.split('(')[1].split(')')[0])
-                if self.dim == 3:
-                    if id <= 4*(1+len(extrudes)):
-                        points_dict[id] = [float(p) for p in line.split('{')[1].split('}')[0].split(',')][:3]
-                else:
-                    points_dict[id] = [float(p) for p in line.split('{')[1].split('}')[0].split(',')][:3]
-            points_dict = dict(sorted(points_dict.items()))
-
-            # extract edges
-            lines__ = torch.Tensor([[int(p) for p in line.split('{')[1].split('}')[0].split(',')] for line in lines__]).long()
-            circles = torch.Tensor([[int(p) for p in line.split('{')[1].split('}')[0].split(',')] for line in circles]).long()[:,[0,2]]
-            edges = torch.cat([lines__, circles], dim=0)
-
-            # list center points
-            center_points = []
-            for id in list(points_dict.keys()):
-                if not id in edges:
-                    center_points.append(id)
-
-            # extract curve loops
-            curve_loops_dict = {}
-            for curve_loop in curve_loops:
-                id = int(curve_loop.split('(')[1].split(')')[0])
-                if self.dim == 3:
-                    if (id <= 1+len(extrudes)):
-                        curve = [int(p) for p in curve_loop.split('{')[1].split('}')[0].split(',')]
-                        curve_loops_dict[id] = curve
-                else:
-                    curve = [int(p) for p in curve_loop.split('{')[1].split('}')[0].split(',')]
-                    curve_loops_dict[id] = curve
-
-            extrude_dict = {}
-            for extrude in extrudes:
-                extrude_dict[float(extrude.split('}')[0].split(',')[-1])] = [int(extrude.split('{')[3:][i].split('}')[0]) for i in range(len(extrude.split('{')[3:]))]
-
-            # Initialize empty geometry using the build in kernel in GMSH
-            geometry = pygmsh.geo.Geometry()
-            # Fetch model we would like to add data to
-            model = geometry.__enter__()
-
-            # Add points
-            points_gmsh = []
-            count = 0
-            for id, point in points_dict.items():
-                if id not in center_points:
-                    points_gmsh.append(model.add_point(x=point, mesh_size=pred[(id-1)-count].cpu().item()))
-                else:
-                    points_gmsh.append(model.add_point(x=point, mesh_size=1.0))
-                    count += 1
-
-            # Add edges
-            channel_lines = []
-            for i in range(0, 4*(self.dim-1), self.dim-1):
-                channel_lines.append(model.add_line(p0=points_gmsh[edges[i][0]-1], p1=points_gmsh[edges[i][1]-1]))
-
-            start = 4
-            while (start+4 <= len(points_dict)):
-                channel_lines.append(model.add_ellipse_arc(
-                    start=points_gmsh[start+1],
-                    center=points_gmsh[start],
-                    point_on_major_axis=points_gmsh[start+2],
-                    end=points_gmsh[start+2]
-                ))
-                channel_lines.append(model.add_ellipse_arc(
-                    start=points_gmsh[start+2],
-                    center=points_gmsh[start],
-                    point_on_major_axis=points_gmsh[start+3],
-                    end=points_gmsh[start+3]
-                ))
-                channel_lines.append(model.add_ellipse_arc(
-                    start=points_gmsh[start+3],
-                    center=points_gmsh[start],
-                    point_on_major_axis=points_gmsh[start+1],
-                    end=points_gmsh[start+1]
-                ))
-                start += 4
-
-            # Add curve loops
-            channel_loop = []
-            for id, curve_loop in curve_loops_dict.items():
-                channel_loop.append(model.add_curve_loop(curves=[channel_lines[i-1] for i in curve_loop]))
-
-            # Create a plane surface for meshing
-            plane_surface = model.add_plane_surface(curve_loop=channel_loop[0], holes=channel_loop[1:])
-
-            if self.dim == 3:
-                # Extrude along z-axis
-                _, solid, _ = model.extrude(plane_surface, translation_axis=(0, 0, list(extrude_dict.keys())[0]))
-
-            # Call gmsh kernel before add physical entities
-            model.synchronize()
-
-            # Add physical entities
-            if self.dim == 2:
-                model.add_physical(entities=[plane_surface], label="VOLUME")
-                model.add_physical(entities=[channel_lines[0]], label="INFLOW")
-                model.add_physical(entities=[channel_lines[2]], label="OUTFLOW")
-                model.add_physical(entities=[channel_lines[1], channel_lines[3]], label="WALL_BOUNDARY")
-                model.add_physical(entities=channel_lines[4:], label="OBSTACLE")
-            elif self.dim == 3:
-                model.add_physical(entities=[plane_surface], label="SURFACE")
-                model.add_physical(entities=[solid], label="VOLUME")
-            else:
-                raise ValueError(f'Invalid dimension: {self.dim}')
-
-            geometry.generate_mesh(dim=self.dim)
-            gmsh.write(osp.join(save_dir, "vtk", 'cad_{:03d}.vtk'.format(batch.name[0])))
-            gmsh.write(osp.join(save_dir, "msh", 'cad_{:03d}.msh'.format(batch.name[0])))
-            
-            gmsh.clear()
-            geometry.__exit__()
-    
