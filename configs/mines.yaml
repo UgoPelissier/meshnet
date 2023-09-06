@@ -92,7 +92,7 @@ model:
       fused: null
   lr_scheduler: null
 data:
-  data_dir: /home/eleve05/adaptnet/meshnet/data/stokes2/ # TODO: change to path to stokes2 or stokes3
+  data_dir: /home/eleve05/adaptnet/meshnet/data/stokes3/ # TODO: change to path to stokes2 or stokes3
   dim: 3 # TODO: change to data dimension: 2 or 3
   val_size: 0.15
   test_size: 0.1

@@ -28,7 +28,7 @@ class MyLightningCLI(LightningCLI):
 
         parser.set_defaults(
             {
-                "data.data_dir": "/home/eleve05/adaptnet/meshnet/data/stokes/", # TODO: Data directory
+                "data.data_dir": "/home/eleve05/adaptnet/meshnet/data/stokes3/", # TODO: Data directory
                 "data.dim": 3, # TODO: Dimension of the problem
                 "data.val_size": 0.15, # Validation size
                 "data.test_size": 0.1, # Test size
