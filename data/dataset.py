@@ -124,7 +124,7 @@ class CAD(Dataset):
             self,
             name: str
     ) -> None:
-        with open(osp.join(self.raw_dir, 'geo', f'{name}.geo'), 'r') as f:
+        with open(osp.join(self.raw_dir, f'{name}.geo'), 'r') as f:
             # read lines and remove comments
             lines = f.readlines()
             lines = [line.strip() for line in lines]

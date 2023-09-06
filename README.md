@@ -28,16 +28,14 @@ Last step is to move the `stokes2` and `stokes3` folders inside the `data` folde
 └── data
     └── stokes2
         └── raw
-            └── geo
-                ├── cad_000.geo
-                :
-                └── cad_500.geo
+            ├── cad_000.geo
+            :
+            └── cad_500.geo
     ├── stokes3
         └── raw
-            └── geo
-                ├── cad_000.geo
-                :
-                └── cad_500.geo
+            ├── cad_000.geo
+            :
+            └── cad_500.geo
     ├── datamodule.py
     └── dataset.py
 ├── model
