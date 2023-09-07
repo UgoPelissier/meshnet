@@ -166,7 +166,7 @@ def generate_mesh_2d(
 
         geometry.generate_mesh(dim=2)
         gmsh.write(osp.join(save_dir, "vtk", 'cad_{:03d}.vtk'.format(batch.name[0])))
-        gmsh.write(osp.join(save_dir, "msh", 'cad_{:03d}.msh'.format(batch.name[0])))
+        gmsh.write(osp.join(save_dir, "mesh", 'cad_{:03d}.msh'.format(batch.name[0])))
         
         gmsh.clear()
         geometry.__exit__()
@@ -223,10 +223,10 @@ def generate_mesh_3d(
         model.add_physical(vol, label='VOLUME')
 
         # Generate mesh
-        mesh = geometry.generate_mesh(dim=3)
+        geometry.generate_mesh(dim=3)
 
         gmsh.write(osp.join(save_dir, "vtk", 'cad_{:03d}.vtk'.format(batch.name[0])))
-        gmsh.write(osp.join(save_dir, "msh", 'cad_{:03d}.msh'.format(batch.name[0])))
+        gmsh.write(osp.join(save_dir, "mesh", 'cad_{:03d}.msh'.format(batch.name[0])))
         
         gmsh.clear()
         geometry.__exit__()
