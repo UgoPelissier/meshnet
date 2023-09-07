@@ -5,7 +5,7 @@ import pygmsh
 import gmsh
 
 from meshnet.utils.stats import load_stats, normalize, unnormalize
-from meshnet.utils.utils import get_next_version, generate_mesh_2d
+from meshnet.utils.utils import get_next_version, generate_mesh_2d, generate_mesh_3d
 from meshnet.model.processor import ProcessorLayer
 
 import torch
@@ -193,6 +193,15 @@ class MeshNet(pl.LightningModule):
                 pred=pred,
                 save_dir=self.test_folder
             )
+        elif self.dim == 3:
+            generate_mesh_3d(
+                cad_path = osp.join(self.data_dir, 'raw', 'cad_{:03d}.geo'.format(batch.name[0])),
+                batch=batch,
+                pred=pred,
+                save_dir=self.test_folder
+            )
+        else:
+            raise ValueError('Dimension must be 2 or 3')
 
         return loss
     

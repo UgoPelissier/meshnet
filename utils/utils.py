@@ -170,3 +170,14 @@ def generate_mesh_2d(
         
         gmsh.clear()
         geometry.__exit__()
+
+def generate_mesh_3d(
+        cad_path: str,
+        batch: Data,
+        pred: torch.Tensor,
+        save_dir: str
+) -> None:
+    """Generate mesh for 3D geometry."""
+    with open (cad_path, 'r+') as f:
+        # read the file
+        return None
