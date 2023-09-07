@@ -159,7 +159,7 @@ def generate_mesh_2d(
         model.synchronize()
 
         # Add physical entities
-        model.add_physical(entities=[plane_surface], label="VOLUME")
+        model.add_physical(entities=[plane_surface], label="FLUID")
         model.add_physical(entities=[channel_lines[0]], label="INFLOW")
         model.add_physical(entities=[channel_lines[2]], label="OUTFLOW")
         model.add_physical(entities=[channel_lines[1], channel_lines[3]], label="WALL_BOUNDARY")
@@ -220,12 +220,12 @@ def generate_mesh_3d(
         for i in range(len(cyl)):
             gmsh.model.mesh.setSize(gmsh.model.getEntities(0)[2*i:2*(i+1)], torch.mean(pred[8+i:8+i+6]).cpu().item())
 
-        # Set physical label
-        model.add_physical(vol, label='VOLUME')
-        model.add_physical([Dummy(gmsh.model.getEntities(2)[i][0], gmsh.model.getEntities(2)[i][1]) for i in range(0,3*len(cyl),3)], label='OBSTACLE')
+        # Set physical labels
+        model.add_physical(vol, label='FLUID')
         model.add_physical(Dummy(gmsh.model.getEntities(2)[3*len(cyl)][0], gmsh.model.getEntities(2)[3*len(cyl)][1]), label='INFLOW')
-        model.add_physical([Dummy(gmsh.model.getEntities(2)[i][0], gmsh.model.getEntities(2)[i][1]) for i in range(3*len(cyl)+1, 3*len(cyl)+5)], label='WALL_BOUNDARY')
         model.add_physical(Dummy(gmsh.model.getEntities(2)[3*len(cyl)+5][0], gmsh.model.getEntities(2)[3*len(cyl)+5][1]), label='OUTFLOW')
+        model.add_physical([Dummy(gmsh.model.getEntities(2)[i][0], gmsh.model.getEntities(2)[i][1]) for i in range(3*len(cyl)+1, 3*len(cyl)+5)], label='WALL_BOUNDARY')
+        model.add_physical([Dummy(gmsh.model.getEntities(2)[i][0], gmsh.model.getEntities(2)[i][1]) for i in range(0,3*len(cyl),3)], label='OBSTACLE')
 
         # Generate mesh
         geometry.generate_mesh(dim=3)
