@@ -205,6 +205,7 @@ def generate_mesh_3d(
         cyl = []
         for cylinder in cylinders:
             cyl.append(model.add_cylinder(x0=cylinder[:3], axis=cylinder[3:6], radius=cylinder[6], angle=2*np.pi))
+            model.synchronize()
 
         # Add boolean difference of box and cylinder to model
         vol = model.boolean_difference([box], cyl, delete_first=True, delete_other=False)
@@ -216,7 +217,7 @@ def generate_mesh_3d(
 
         # Set mesh size for cylinder points
         for i in range(len(cyl)):
-            gmsh.model.mesh.setSize([gmsh.model.getEntities(0)[i:i+2]], torch.mean(pred[8+i:8+i+6]).cpu().item())
+            gmsh.model.mesh.setSize(gmsh.model.getEntities(0)[2*i:2*(i+1)], torch.mean(pred[8+i:8+i+6]).cpu().item())
 
         # Set physical label
         model.add_physical(vol, label='VOLUME')
