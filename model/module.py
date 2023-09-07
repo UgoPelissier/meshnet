@@ -186,14 +186,14 @@ class MeshNet(pl.LightningModule):
         loss = self.loss(pred, batch, split='test')
         self.log("test/loss", loss, on_step=False, on_epoch=True, prog_bar=False, logger=True, batch_size=batch.x.shape[0])
 
-        if self.dim == 2:
+        if (self.dim==2):
             generate_mesh_2d(
                 cad_path = osp.join(self.data_dir, 'raw', 'cad_{:03d}.geo'.format(batch.name[0])),
                 batch=batch,
                 pred=pred,
                 save_dir=self.test_folder
             )
-        elif self.dim == 3:
+        elif (self.dim==3):
             generate_mesh_3d(
                 cad_path = osp.join(self.data_dir, 'raw', 'cad_{:03d}.geo'.format(batch.name[0])),
                 batch=batch,
