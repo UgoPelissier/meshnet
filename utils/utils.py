@@ -179,5 +179,53 @@ def generate_mesh_3d(
 ) -> None:
     """Generate mesh for 3D geometry."""
     with open (cad_path, 'r+') as f:
-        # read the file
-        return None
+        lines = f.readlines()
+        lines = [line.strip() for line in lines]
+        lines = [line for line in lines if not (line.startswith('//') or line.startswith('SetFactory'))]
+
+        # extract geometries
+        box = [line for line in lines if line.startswith('Box')]
+        cylinders = [line for line in lines if line.startswith('Cylinder')]
+
+        # extract coordinates from geometries
+        box = [float(box[0].split('{')[1].split('}')[0].split(', ')[i]) for i in range(len(box[0].split('{')[1].split('}')[0].split(', ')))] # [xs, ys, zs, dx, dy, dz]
+        cylinders = [[float(cylinders[j].split('{')[1].split('}')[0].split(', ')[i]) for i in range(len(cylinders[0].split('{')[1].split('}')[0].split(', '))-1)] for j in range(len(cylinders))] # [xs, ys, zs, dx, dy, dz, r]
+
+        # Initialize empty geometry using the build in kernel in GMSH
+        geometry = pygmsh.occ.geometry.Geometry()
+
+        # Fetch model we would like to add data to
+        model = geometry.__enter__()
+
+        # Add box to model
+        box = model.add_box(box[:3], box[3:])
+        model.synchronize()
+
+        # Add cylinders to model
+        cyl = []
+        for cylinder in cylinders:
+            cyl.append(model.add_cylinder(x0=cylinder[:3], axis=cylinder[3:6], radius=cylinder[6], angle=2*np.pi))
+
+        # Add boolean difference of box and cylinder to model
+        vol = model.boolean_difference([box], cyl, delete_first=True, delete_other=False)
+        model.synchronize()
+
+        # Set mesh size for box points
+        for i in range(8):
+            gmsh.model.mesh.setSize([gmsh.model.getEntities(0)[2*len(cyl)+i]], torch.mean(pred[i]).cpu().item())
+
+        # Set mesh size for cylinder points
+        for i in range(len(cyl)):
+            gmsh.model.mesh.setSize([gmsh.model.getEntities(0)[i:i+2]], torch.mean(pred[8+i:8+i+6]).cpu().item())
+
+        # Set physical label
+        model.add_physical(vol, label='VOLUME')
+
+        # Generate mesh
+        mesh = geometry.generate_mesh(dim=3)
+
+        gmsh.write(osp.join(save_dir, "vtk", 'cad_{:03d}.vtk'.format(batch.name[0])))
+        gmsh.write(osp.join(save_dir, "msh", 'cad_{:03d}.msh'.format(batch.name[0])))
+        
+        gmsh.clear()
+        geometry.__exit__()
