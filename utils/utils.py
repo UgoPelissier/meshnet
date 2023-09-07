@@ -7,6 +7,7 @@ import logging
 import torch
 from torch_geometric.data import Data
 import pygmsh
+from pygmsh.occ.dummy import Dummy
 import gmsh
 from lightning.fabric.utilities.cloud_io import get_filesystem
 
@@ -221,6 +222,10 @@ def generate_mesh_3d(
 
         # Set physical label
         model.add_physical(vol, label='VOLUME')
+        model.add_physical([Dummy(gmsh.model.getEntities(2)[i][0], gmsh.model.getEntities(2)[i][1]) for i in range(0,3*len(cyl),3)], label='OBSTACLE')
+        model.add_physical(Dummy(gmsh.model.getEntities(2)[3*len(cyl)][0], gmsh.model.getEntities(2)[3*len(cyl)][1]), label='INFLOW')
+        model.add_physical([Dummy(gmsh.model.getEntities(2)[i][0], gmsh.model.getEntities(2)[i][1]) for i in range(3*len(cyl)+1, 3*len(cyl)+5)], label='WALL_BOUNDARY')
+        model.add_physical(Dummy(gmsh.model.getEntities(2)[3*len(cyl)+5][0], gmsh.model.getEntities(2)[3*len(cyl)+5][1]), label='OUTFLOW')
 
         # Generate mesh
         geometry.generate_mesh(dim=3)
