@@ -128,23 +128,21 @@ class MeshNet(pl.LightningModule):
     
     def loss(self, pred: torch.Tensor, inputs: Data, split: str) -> torch.Tensor:
         """Calculate the loss for the given prediction and inputs."""
-        # loss_mask = torch.argmax(inputs.x,dim=1)==torch.tensor(NodeType.OBSTACLE)
-
         # normalize labels with dataset statistics
         if split == 'train':
-            labels = normalize(data=inputs.y, mean=self.mean_vec_y_train, std=self.std_vec_y_train)
+            y = normalize(data=inputs.y, mean=self.mean_vec_y_train, std=self.std_vec_y_train)
         elif split == 'val':
-            labels = normalize(data=inputs.y, mean=self.mean_vec_y_val, std=self.std_vec_y_val)
+            y = normalize(data=inputs.y, mean=self.mean_vec_y_val, std=self.std_vec_y_val)
         elif split == 'test':
-            labels = inputs.y
+            y = inputs.y
         else:
             raise ValueError(f'Invalid split: {split}')
 
         # find sum of square errors
-        error = torch.sum((labels-pred.squeeze())**2)
+        error = torch.sum((y.unsqueeze(dim=1)-pred)**2, dim=1)
 
         # root and mean the errors for the nodes we calculate loss for
-        loss= torch.sqrt(torch.mean(error))
+        loss = torch.sqrt(torch.mean(error))
         
         return loss
     
@@ -188,14 +186,14 @@ class MeshNet(pl.LightningModule):
 
         if (self.dim==2):
             generate_mesh_2d(
-                cad_path = osp.join(self.data_dir, 'raw', 'cad_{:03d}.geo'.format(batch.name[0])),
+                cad_path = osp.join(self.data_dir, 'geo', 'cad_{:03d}.geo'.format(batch.name[0])),
                 batch=batch,
                 pred=pred,
                 save_dir=self.test_folder
             )
         elif (self.dim==3):
             generate_mesh_3d(
-                cad_path = osp.join(self.data_dir, 'raw', 'cad_{:03d}.geo'.format(batch.name[0])),
+                cad_path = osp.join(self.data_dir, 'geo', 'cad_{:03d}.geo'.format(batch.name[0])),
                 batch=batch,
                 pred=pred,
                 save_dir=self.test_folder
