@@ -209,7 +209,7 @@ def generate_mesh_3d(
             model.synchronize()
 
         # Add boolean difference of box and cylinder to model
-        vol = model.boolean_difference([box], cyl, delete_first=True, delete_other=False)
+        vol = model.boolean_difference([box], cyl, delete_first=True, delete_other=True)
         model.synchronize()
 
         # Set mesh size for box points
