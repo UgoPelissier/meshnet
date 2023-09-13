@@ -233,7 +233,6 @@ class CAD(Dataset):
             # read lines and remove comments
             lines = f.readlines()
             lines = [line.replace(' ', '') for line in lines]
-            lines = [line.replace('-', '') for line in lines]
 
             # Extract mesh sizes variables
             mesh_sizes_variables = {}
@@ -258,7 +257,11 @@ class CAD(Dataset):
                     mesh_sizes[key] = mesh_sizes_variables[value[-1]]
                 i+=1
             points = torch.Tensor(list(coo.values()))
+
+            # Convert mesh sizes to tensor
             y = torch.Tensor(list(mesh_sizes.values()))
+            indices = torch.Tensor([convert_points[key] for key in mesh_sizes.keys()]).long()
+            points = points[indices]
 
             # Extract edges
             edges = {}
@@ -277,6 +280,13 @@ class CAD(Dataset):
                     connectivity.append([convert_points[value[i]], convert_points[value[i+1]]])
             edges = torch.Tensor(connectivity).long()
 
+            # Identify edges to keep
+            keep_edges = []
+            for i in range(edges.shape[0]):
+                if ((edges[i,0] in indices) and (edges[i,1] in indices)):
+                    keep_edges.append(i)
+            edges = edges[keep_edges]                  
+
             receivers = torch.min(edges, dim=1).values
             senders = torch.max(edges, dim=1).values
             packed_edges = torch.stack([senders, receivers], dim=1)
@@ -289,6 +299,7 @@ class CAD(Dataset):
             # Extract curves
             curves = {}
             tmp = [line for line in lines if line.startswith("CurveLoop(")]
+            tmp = [line.replace('-', '') for line in tmp]
             for line in tmp:
                 key = line.split('(')[1].split(')')[0]
                 value = line.split('{')[1].split('}')[0].split(',')
@@ -335,6 +346,7 @@ class CAD(Dataset):
                     else:
                         raise ValueError('Physical group not recognized.')
             edge_types = torch.Tensor(physical_groups_edges).long().long()
+            edge_types = edge_types[keep_edges]
             
             # convert edges labels to edge_index format
             tmp = torch.zeros(edges.shape[0], dtype=torch.long)
