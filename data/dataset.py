@@ -266,6 +266,7 @@ class CAD(Dataset):
             # Extract edges
             edges = {}
             tmp = [line for line in lines if line.startswith("Line(") or line.startswith("Spline(")]
+            n_cyl = len(tmp)/2
             for line in tmp:
                 key = line.split('(')[1].split(')')[0]
                 value = line.split('{')[1].split('}')[0].split(',')
@@ -285,15 +286,27 @@ class CAD(Dataset):
             for i in range(edges.shape[0]):
                 if ((edges[i,0] in indices) and (edges[i,1] in indices)):
                     keep_edges.append(i)
-            edges = edges[keep_edges]                  
+            edges = edges[keep_edges]
+
+            # Add control edges
+            for i in range(n_cyl):
+                edges = torch.cat((edges, torch.Tensor([[7+i,0]]).long()))
+                edges = torch.cat((edges, torch.Tensor([[7+i,2]]).long()))
+                edges = torch.cat((edges, torch.Tensor([[7+i,5]]).long()))
+                edges = torch.cat((edges, torch.Tensor([[7+i,6]]).long()))
+
+                edges = torch.cat((edges, torch.Tensor([[8+n_cyl+i,1]]).long()))
+                edges = torch.cat((edges, torch.Tensor([[8+n_cyl+i,3]]).long()))
+                edges = torch.cat((edges, torch.Tensor([[8+n_cyl+i,4]]).long()))
+                edges = torch.cat((edges, torch.Tensor([[8+n_cyl+i,9]]).long()))  
 
             receivers = torch.min(edges, dim=1).values
             senders = torch.max(edges, dim=1).values
             packed_edges = torch.stack([senders, receivers], dim=1)
-            # remove duplicates and unpack
+            # Remove duplicates and unpack
             unique_edges, permutation = torch.unique(packed_edges, return_inverse=True, dim=0)
             senders, receivers = unique_edges[:, 0], unique_edges[:, 1]
-            # create two-way connectivity
+            # Create two-way connectivity
             edge_index = torch.stack([torch.cat((senders, receivers), dim=0), torch.cat((receivers, senders), dim=0)], dim=0).long()
 
             # Extract curves
@@ -347,6 +360,7 @@ class CAD(Dataset):
                         raise ValueError('Physical group not recognized.')
             edge_types = torch.Tensor(physical_groups_edges).long().long()
             edge_types = edge_types[keep_edges]
+            edge_types = torch.cat((edge_types, (NodeType.WALL_BOUNDARY*torch.ones(edges.shape[0]-edge_types.shape[0])).long().long()))
             
             # convert edges labels to edge_index format
             tmp = torch.zeros(edges.shape[0], dtype=torch.long)
