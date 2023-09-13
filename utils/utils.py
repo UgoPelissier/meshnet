@@ -213,19 +213,15 @@ def generate_mesh_3d(
         model.synchronize()
 
         # Set mesh size for box points
-        for i in range(8):
-            gmsh.model.mesh.setSize([gmsh.model.getEntities(0)[2*len(cyl)+i]], torch.mean(pred[i]).cpu().item())
-
-        # Set mesh size for cylinder points
-        for i in range(len(cyl)):
-            gmsh.model.mesh.setSize(gmsh.model.getEntities(0)[2*i:2*(i+1)], torch.mean(pred[8+i:8+i+6]).cpu().item())
+        for i in range(len(gmsh.model.getEntities(0))):
+            gmsh.model.mesh.setSize([gmsh.model.getEntities(0)[i]], pred[i].cpu().item())
 
         # Set physical labels
         model.add_physical(vol, label='FLUID')
-        model.add_physical(Dummy(gmsh.model.getEntities(2)[3*len(cyl)][0], gmsh.model.getEntities(2)[3*len(cyl)][1]), label='INFLOW')
-        model.add_physical(Dummy(gmsh.model.getEntities(2)[3*len(cyl)+5][0], gmsh.model.getEntities(2)[3*len(cyl)+5][1]), label='OUTFLOW')
-        model.add_physical([Dummy(gmsh.model.getEntities(2)[i][0], gmsh.model.getEntities(2)[i][1]) for i in range(3*len(cyl)+1, 3*len(cyl)+5)], label='WALL_BOUNDARY')
-        model.add_physical([Dummy(gmsh.model.getEntities(2)[i][0], gmsh.model.getEntities(2)[i][1]) for i in range(0,3*len(cyl),3)], label='OBSTACLE')
+        model.add_physical(Dummy(gmsh.model.getEntities(2)[0][0], gmsh.model.getEntities(2)[0][1]), label='INFLOW')
+        model.add_physical(Dummy(gmsh.model.getEntities(2)[6][0], gmsh.model.getEntities(2)[5][1]), label='OUTFLOW')
+        model.add_physical([Dummy(gmsh.model.getEntities(2)[i][0], gmsh.model.getEntities(2)[i][1]) for i in range(1,5)], label='WALL_BOUNDARY')
+        model.add_physical([Dummy(gmsh.model.getEntities(2)[i][0], gmsh.model.getEntities(2)[i][1]) for i in range(6,6+len(cyl))], label='OBSTACLE')
 
         # Generate mesh
         geometry.generate_mesh(dim=3)
