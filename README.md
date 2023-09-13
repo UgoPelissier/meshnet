@@ -17,7 +17,7 @@ The data is available on the Safran GitLab. In a different folder than the one c
 ```bash
 git clone https://github.com/UgoPelissier/dataset
 ```
-And follow the instructions in the README.md file. This will create `geo` folders inside `stokes2` and `stokes3` folders containing the CAD models.
+And follow the instructions in the README.md file. This will create `geo` and `geo_unrolled` folders inside `stokes2` and `stokes3` folders containing the CAD models.
 
 Last step is to move the `stokes2` and `stokes3` folders inside the `data` folder of this meshnet repository. The final structure should look like this:
 
@@ -27,15 +27,23 @@ Last step is to move the `stokes2` and `stokes3` folders inside the `data` folde
 ├── data
 └── data
     └── stokes2
-        └── raw
+        └── geo
             ├── cad_000.geo
             :
             └── cad_500.geo
+        └── raw
+            ├── cad_000.geo_unrolled
+            :
+            └── cad_500.geo_unrolled
     ├── stokes3
-        └── raw
+        └── geo
             ├── cad_000.geo
             :
             └── cad_500.geo
+        └── raw
+            ├── cad_000.geo_unrolled
+            :
+            └── cad_500.geo_unrolled
     ├── datamodule.py
     └── dataset.py
 ├── model
