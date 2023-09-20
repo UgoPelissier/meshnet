@@ -150,7 +150,8 @@ class MeshNet(pl.LightningModule):
         """Set up folders for validation and test sets"""
         os.makedirs(self.test_folder, exist_ok=True)
         os.makedirs(osp.join(self.test_folder, "vtk"), exist_ok=True)
-        os.makedirs(osp.join(self.test_folder, "mesh"), exist_ok=True)
+        os.makedirs(osp.join(self.test_folder, "mesh2"), exist_ok=True)
+        os.makedirs(osp.join(self.test_folder, "mesh3"), exist_ok=True)
 
     def training_step(self, batch, batch_idx: int) -> torch.Tensor:
         """Training step of the model."""

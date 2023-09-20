@@ -216,18 +216,25 @@ def generate_mesh_3d(
         for i in range(len(gmsh.model.getEntities(0))):
             gmsh.model.mesh.setSize([gmsh.model.getEntities(0)[i]], pred[i].cpu().item())
 
-        # Set physical labels
-        model.add_physical(vol, label='FLUID')
+        # Set 2d physical labels
         model.add_physical(Dummy(gmsh.model.getEntities(2)[0][0], gmsh.model.getEntities(2)[0][1]), label='INFLOW')
         model.add_physical(Dummy(gmsh.model.getEntities(2)[6][0], gmsh.model.getEntities(2)[5][1]), label='OUTFLOW')
         model.add_physical([Dummy(gmsh.model.getEntities(2)[i][0], gmsh.model.getEntities(2)[i][1]) for i in range(1,5)], label='WALL_BOUNDARY')
         model.add_physical([Dummy(gmsh.model.getEntities(2)[i][0], gmsh.model.getEntities(2)[i][1]) for i in range(6,6+len(cyl))], label='OBSTACLE')
 
-        # Generate mesh
+        # Generate 2d mesh
+        geometry.generate_mesh(dim=2)
+
+        gmsh.write(osp.join(save_dir, "mesh2", 'cad_{:03d}.msh2'.format(batch.name[0])))
+        
+        # Set 3d physical labels
+        model.add_physical(vol, label='FLUID')
+
+        # Generate 3d mesh
         geometry.generate_mesh(dim=3)
 
         gmsh.write(osp.join(save_dir, "vtk", 'cad_{:03d}.vtk'.format(batch.name[0])))
-        gmsh.write(osp.join(save_dir, "mesh", 'cad_{:03d}.msh2'.format(batch.name[0])))
+        gmsh.write(osp.join(save_dir, "mesh3", 'cad_{:03d}.msh2'.format(batch.name[0])))
         
         gmsh.clear()
         geometry.__exit__()
