@@ -227,7 +227,7 @@ def generate_mesh_3d(
         geometry.generate_mesh(dim=3)
 
         gmsh.write(osp.join(save_dir, "vtk", 'cad_{:03d}.vtk'.format(batch.name[0])))
-        gmsh.write(osp.join(save_dir, "mesh3", 'cad_{:03d}.msh2'.format(batch.name[0])))
+        gmsh.write(osp.join(save_dir, "mesh", 'cad_{:03d}.msh2'.format(batch.name[0])))
         
         gmsh.clear()
         geometry.__exit__()
