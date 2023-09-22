@@ -266,7 +266,7 @@ class CAD(Dataset):
             # Extract edges
             edges = {}
             tmp = [line for line in lines if line.startswith("Line(") or line.startswith("Spline(")]
-            n_cyl = len(tmp)/2
+            n_cyl = int(len([line for line in lines if line.startswith("Spline(")])/2)
             for line in tmp:
                 key = line.split('(')[1].split(')')[0]
                 value = line.split('{')[1].split('}')[0].split(',')
