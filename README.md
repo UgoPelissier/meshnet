@@ -44,6 +44,15 @@ Last step is to move the `stokes2` and `stokes3` folders inside the `data` folde
             ├── cad_000.geo_unrolled
             :
             └── cad_500.geo_unrolled
+    ├── stokes3adapt
+        └── geo
+            ├── cad_000.geo
+            :
+            └── cad_500.geo
+        └── raw
+            ├── cad_000.geo_unrolled
+            :
+            └── cad_500.geo_unrolled
     ├── datamodule.py
     └── dataset.py
 ├── model
