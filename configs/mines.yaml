@@ -67,9 +67,9 @@ trainer:
   default_root_dir: null
 model:
   wdir: /home/eleve05/adaptnet/meshnet/ # TODO: change to path to meshnet
-  data_dir: /home/eleve05/adaptnet/meshnet/data/stokes2/ # TODO: change to path to stokes2, stokes3 or stokes3adapt
+  data_dir: /home/eleve05/adaptnet/meshnet/data/stokes3adapt/ # TODO: change to path to stokes2, stokes3 or stokes3adapt
   logs: /home/eleve05/adaptnet/meshnet/logs/ # TODO: change to path to meshnet/logs
-  dim: 2 # TODO: change to data dimension: 2 or 3
+  dim: 3 # TODO: change to data dimension: 2 or 3
   num_layers: 15
   input_dim_node: 5
   input_dim_edge: 8
@@ -92,8 +92,8 @@ model:
       fused: null
   lr_scheduler: null
 data:
-  data_dir: /home/eleve05/adaptnet/meshnet/data/stokes2/ # TODO: change to path to stokes2, stokes3 or stokes3adapt
-  dim: 2 # TODO: change to data dimension: 2 or 3
+  data_dir: /home/eleve05/adaptnet/meshnet/data/stokes3adapt/ # TODO: change to path to stokes2, stokes3 or stokes3adapt
+  dim: 3 # TODO: change to data dimension: 2 or 3
   val_size: 0.15
   test_size: 0.1
   batch_size: 1
