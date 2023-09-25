@@ -3,6 +3,7 @@ raw
 geo
 processed
 indices
+version_4
 test
 events.out*
 hparams.yaml
