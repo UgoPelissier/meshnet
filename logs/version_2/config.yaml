@@ -1,5 +1,5 @@
 # lightning.pytorch==2.0.2
-name: dataset3
+name: dataset3adapt
 seed_everything: 42
 trainer:
   accelerator: gpu
