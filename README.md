@@ -25,23 +25,7 @@ Last step is to move the `stokes2`, `stokes3` and `stokes3adapt` folders inside 
 ├── data
 └── data
     └── stokes2
-        └── geo
-            ├── cad_000.geo
-            :
-            └── cad_500.geo
-        └── raw
-            ├── cad_000.geo_unrolled
-            :
-            └── cad_500.geo_unrolled
     ├── stokes3
-        └── geo
-            ├── cad_000.geo
-            :
-            └── cad_500.geo
-        └── raw
-            ├── cad_000.geo_unrolled
-            :
-            └── cad_500.geo_unrolled
     ├── stokes3adapt
         └── geo
             ├── cad_000.geo
