@@ -50,9 +50,9 @@ To set the parameters, you can either change them inside the `main.py` file and 
 ```bash
 python main.py fit
 ```
-or you can change them in the `configs/mines.yaml` file and train the model by running:
+or you can change them in the `configs/config.yaml` file and train the model by running:
 ```bash
-python main.py fit -c configs/mines.yaml
+python main.py fit -c configs/config.yaml
 ```
 
 You can get help on the command line arguments by running:
@@ -71,7 +71,7 @@ tensorboard --logdir=logs/
 ### Test the model
 To test the model, run:
 ```bash
-python main.py test -c configs/safran.yaml --ckpt_path $ckpt_path
+python main.py test -c configs/config.yaml --ckpt_path $ckpt_path
 ```
 where `$ckpt_path` is the path to the checkpoint file located in the `logs/version_$version/checkpoints/` folder.
 
