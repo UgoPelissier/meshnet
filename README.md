@@ -6,7 +6,7 @@ Meshnet is a Graph Neural Network (GNN) model for the prediction of mesh paramet
 
 ### Conda environment
 ```bash
-mamba env create -f utils/envs/meshnet_no_builds.yml
+conda env create -f utils/envs/meshnet_no_builds.yml
 conda activate meshnet
 ```
 
